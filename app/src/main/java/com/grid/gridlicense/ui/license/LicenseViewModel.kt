@@ -39,10 +39,6 @@ class LicenseViewModel @Inject constructor() : ViewModel() {
             isRta: Boolean,
             rtaDays: String,
     ) {
-        if (deviceID.isEmpty()) {
-            showError("please enter a device id!")
-            return
-        }
         state.value = state.value.copy(
             isLoading = true
         )
