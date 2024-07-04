@@ -36,7 +36,8 @@ class LicenseViewModel @Inject constructor() : ViewModel() {
             context: Context,
             deviceID: String,
             expiryDate: Date,
-            isRta: Boolean
+            isRta: Boolean,
+            rtaDays: String,
     ) {
         if (deviceID.isEmpty()) {
             showError("please enter a device id!")
@@ -52,7 +53,11 @@ class LicenseViewModel @Inject constructor() : ViewModel() {
                 "yyyyMMdd"
             )
             val rtaStr = if (isRta) "1" else "0"
-            val licenseString = "$deviceID$sep$dateString$sep$rtaStr"
+            val licenseString = if (rtaDays.isNotEmpty()) {
+                "$deviceID$sep$dateString$sep$rtaStr$sep$rtaDays"
+            } else {
+                "$deviceID$sep$dateString$sep$rtaStr"
+            }
 
             val encryptedOutput = CryptoUtils.encrypt(
                 licenseString,

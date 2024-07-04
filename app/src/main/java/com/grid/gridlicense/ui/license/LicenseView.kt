@@ -58,6 +58,7 @@ import com.grid.gridlicense.ui.common.UISwitch
 import com.grid.gridlicense.ui.theme.GridLicenseTheme
 import com.grid.gridlicense.ui.theme.LightBlue
 import com.grid.gridlicense.utils.DateHelper
+import com.grid.gridlicense.utils.Utils
 import com.grid.pos.ui.common.LoadingIndicator
 import com.grid.pos.ui.common.UIAlertDialog
 import com.grid.pos.ui.common.UIButton
@@ -126,6 +127,7 @@ fun LicenseView(
     var isRtaState by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var isPopupVisible by remember { mutableStateOf(false) }
+    var rtaDaysState by remember { mutableStateOf("") }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -230,6 +232,19 @@ fun LicenseView(
                     isRtaState = isRta
                 }
 
+                if (isRtaState) {
+                    UITextField(modifier = Modifier.padding(10.dp),
+                        defaultValue = rtaDaysState,
+                        label = "Number Of Days",
+                        keyboardType = KeyboardType.Number,
+                        placeHolder = "Number Of Days",
+                        onAction = {
+                            keyboardController?.hide()
+                        }) { days ->
+                        rtaDaysState = Utils.getIntValue(days,rtaDaysState)
+                    }
+                }
+
                 UIButton(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -248,7 +263,8 @@ fun LicenseView(
                         context,
                         deviceIdState,
                         expiryDate,
-                        isRtaState
+                        isRtaState,
+                        rtaDaysState
                     )
                 }
             }

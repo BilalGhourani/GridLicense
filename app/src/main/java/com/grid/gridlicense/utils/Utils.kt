@@ -30,6 +30,20 @@ object Utils {
         return currentYear.toString()
     }
 
+    fun getIntValue(
+            new: String,
+            old: String
+    ): String {
+        return if (new.isEmpty()) {
+            new
+        } else {
+            when (new.toIntOrNull()) {
+                null -> old //old value
+                else -> new  //new value
+            }
+        }
+    }
+
     fun getDeviceID(context: Context): String {
         return Settings.Secure.getString(
             context.contentResolver,
