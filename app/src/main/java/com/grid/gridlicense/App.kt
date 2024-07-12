@@ -2,6 +2,7 @@ package com.grid.gridlicense
 
 import android.app.Application
 import android.util.Log
+import com.grid.gridlicense.data.DataStoreManager
 import com.grid.gridlicense.utils.FileUtils
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
@@ -28,6 +29,7 @@ class App : Application() {
         instance = this
         CoroutineScope(Dispatchers.IO).launch {
             initAppConfig()
+            DataStoreManager.initValues()
         }
     }
 

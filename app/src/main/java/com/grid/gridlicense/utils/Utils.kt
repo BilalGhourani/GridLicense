@@ -5,11 +5,27 @@ import android.content.res.Configuration
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
+import com.grid.gridlicense.model.HomeSectionModel
 import java.time.Year
 import java.util.Calendar
 import java.util.UUID
 
 object Utils {
+
+    val homeViewList = mutableListOf(
+        HomeSectionModel(
+            "Users",
+            "ManageUsersView"
+        ),
+        HomeSectionModel(
+            "Clients",
+            "ManageClientsView"
+        ),
+        HomeSectionModel(
+            "Licenses",
+            "ManageLicensesView"
+        )
+    )
 
     fun generateRandomUuidString(): String {
         return UUID.randomUUID().toString()
@@ -18,7 +34,6 @@ object Utils {
     fun isTablet(configuration: Configuration): Boolean {
         return configuration.screenWidthDp > 840
     }
-
 
     fun getCurrentYear(): String {
         val calendar: Calendar = Calendar.getInstance()

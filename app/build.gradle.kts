@@ -86,12 +86,10 @@ dependencies {
     kapt("com.google.dagger:hilt-android-compiler:2.48")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
-/*    // Room
-    implementation("androidx.room:room-runtime:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
 
-    // Kotlin Extensions and Coroutines support for Room
-    implementation("androidx.room:room-ktx:2.6.1")
-
- */
+    //jetPack DataStore
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
+    implementation("androidx.datastore:datastore-preferences-rxjava2:1.0.0")
+    implementation("androidx.datastore:datastore-preferences-rxjava3:1.0.0")
+    implementation("net.sourceforge.jtds:jtds:1.3.1")
 }

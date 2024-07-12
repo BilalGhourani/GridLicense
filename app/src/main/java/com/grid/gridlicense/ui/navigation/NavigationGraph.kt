@@ -9,6 +9,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.grid.gridlicense.ui.license.LicenseView
 import com.grid.gridlicense.ActivityScopedViewModel
+import com.grid.gridlicense.ui.home.HomeView
+import com.grid.gridlicense.ui.login.LoginView
 
 @Composable
 fun AuthNavGraph(
@@ -22,6 +24,20 @@ fun AuthNavGraph(
         startDestination = startDestination,
         modifier = modifier.background(color = Color.White)
     ) {
+
+        composable(route = "LoginView") {
+            LoginView(
+                navController = navController,
+                activityScopedViewModel = activityViewModel
+            )
+        }
+
+        composable(route = "HomeView") {
+            HomeView(
+                navController = navController,
+                activityViewModel = activityViewModel
+            )
+        }
 
         composable(route = "LicenseView") {
             LicenseView(
