@@ -1,7 +1,6 @@
-package com.grid.pos.data.client
+package com.grid.gridlicense.data.client
 
 import com.grid.gridlicense.data.SQLServerWrapper
-import com.grid.pos.data.User.Client
 
 class ClientRepositoryImpl() : ClientRepository {
     override suspend fun insert(
@@ -18,10 +17,10 @@ class ClientRepositoryImpl() : ClientRepository {
             ),
             listOf(
                 client.clientid,
-                client.name,
-                client.email,
-                client.phone,
-                client.country
+                client.clientName,
+                client.clientEmail,
+                client.clientPhone,
+                client.clientCountry
             )
         )
         return client
@@ -48,10 +47,10 @@ class ClientRepositoryImpl() : ClientRepository {
                 "country"
             ),
             listOf(
-                client.name,
-                client.email,
-                client.phone,
-                client.country
+                client.clientName,
+                client.clientEmail,
+                client.clientPhone,
+                client.clientCountry
             ),
             "userid = '${client.clientid}'"
         )
@@ -68,10 +67,10 @@ class ClientRepositoryImpl() : ClientRepository {
         dbResult.forEach { obj ->
             clients.add(Client().apply {
                 clientid = obj.optString("clientid")
-                name = obj.optString("name")
-                email = obj.optString("email")
-                phone = obj.optString("phone")
-                country = obj.optString("country")
+                clientName = obj.optString("name")
+                clientEmail = obj.optString("email")
+                clientPhone = obj.optString("phone")
+                clientCountry = obj.optString("country")
             })
         }
         return clients

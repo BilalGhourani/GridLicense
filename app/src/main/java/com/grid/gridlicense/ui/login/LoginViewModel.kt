@@ -2,9 +2,9 @@ package com.grid.gridlicense.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.grid.gridlicense.data.user.UserRepository
 import com.grid.gridlicense.model.Event
 import com.grid.gridlicense.model.SettingsModel
-import com.grid.pos.data.User.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

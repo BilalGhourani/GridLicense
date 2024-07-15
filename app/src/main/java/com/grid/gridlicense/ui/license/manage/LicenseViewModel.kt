@@ -1,14 +1,18 @@
-package com.grid.gridlicense.ui.license
+package com.grid.gridlicense.ui.license.manage
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.grid.gridlicense.App
+import com.grid.gridlicense.data.client.ClientRepository
+import com.grid.gridlicense.data.license.License
+import com.grid.gridlicense.data.license.LicenseRepository
 import com.grid.gridlicense.model.Event
 import com.grid.gridlicense.utils.CryptoUtils
 import com.grid.gridlicense.utils.DateHelper
 import com.grid.gridlicense.utils.FileUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -18,18 +22,70 @@ import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
-class LicenseViewModel @Inject constructor() : ViewModel() {
+class LicenseViewModel @Inject constructor(
+        private val licenseRepository: LicenseRepository,
+        private val clientRepository: ClientRepository
+) : ViewModel() {
 
     private val _state = MutableStateFlow(LicenseState())
     val state: MutableStateFlow<LicenseState> = _state
 
     var licenseFile: File? = null
 
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            fetchClients()
+        }
+    }
+
+    private suspend fun fetchClients() {
+        val listOfClients = clientRepository.getAllClients()
+        viewModelScope.launch(Dispatchers.Main) {
+            state.value = state.value.copy(
+                clients = listOfClients
+            )
+        }
+    }
+
     fun showError(message: String) {
         state.value = state.value.copy(
             warning = Event(message),
             isLoading = false
         )
+    }
+
+    fun saveClient(license: License) {
+        if (license.cltid.isNullOrEmpty()) {
+            showError("select a client!")
+            return
+        }
+        state.value = state.value.copy(
+            isLoading = true,
+            warning = null
+        )
+        val isInserting = license.isNew()
+        CoroutineScope(Dispatchers.IO).launch {
+            if (isInserting) {
+                license.prepareForInsert()
+                val addedModel = licenseRepository.insert(license)
+                viewModelScope.launch(Dispatchers.Main) {
+                    state.value = state.value.copy(
+                        selectedLicense = addedModel,
+                        isLoading = false,
+                        clear = true
+                    )
+                }
+            } else {
+                licenseRepository.update(license)
+                viewModelScope.launch(Dispatchers.Main) {
+                    state.value = state.value.copy(
+                        selectedLicense = license,
+                        isLoading = false,
+                        clear = true
+                    )
+                }
+            }
+        }
     }
 
     fun generate(

@@ -1,17 +1,18 @@
-package com.grid.gridlicense.ui.login
+package com.grid.gridlicense.ui.users
 
-import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -21,7 +22,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -35,10 +35,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -50,83 +50,63 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.grid.gridlicense.ActivityScopedViewModel
 import com.grid.gridlicense.R
 import com.grid.gridlicense.model.SettingsModel
+import com.grid.gridlicense.ui.common.SearchableDropdownMenu
 import com.grid.gridlicense.ui.theme.GridLicenseTheme
+import com.grid.gridlicense.data.user.User
 import com.grid.gridlicense.ui.common.LoadingIndicator
 import com.grid.gridlicense.ui.common.UIButton
 import com.grid.gridlicense.ui.common.UITextField
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-@SuppressLint("CoroutineCreationDuringComposition")
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalComposeUiApi::class
+)
 @Composable
-fun LoginView(
-        modifier: Modifier = Modifier,
+fun UsersView(
         navController: NavController? = null,
-        activityScopedViewModel: ActivityScopedViewModel,
-        viewModel: LoginViewModel = hiltViewModel()
+        modifier: Modifier = Modifier,
+        viewModel: UsersViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
-    val loginState by viewModel.usersState.collectAsState()
+    val usersState: UsersState by viewModel.usersState.collectAsState(
+        UsersState()
+    )
     val keyboardController = LocalSoftwareKeyboardController.current
     val passwordFocusRequester = remember { FocusRequester() }
+    val emailFocusRequester = remember { FocusRequester() }
+    val deviceIdFocusRequester = remember { FocusRequester() }
 
+    var nameState by remember { mutableStateOf("") }
     var usernameState by remember { mutableStateOf("") }
     var passwordState by remember { mutableStateOf("") }
+    var emailState by remember { mutableStateOf("") }
+    var deviceIdState by remember { mutableStateOf("") }
     var passwordVisibility by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-
-    LaunchedEffect(loginState.warning) {
-        loginState.warning?.value?.let { message ->
+    LaunchedEffect(usersState.warning) {
+        usersState.warning?.value?.let { message ->
             scope.launch {
-                val snackbarResult = snackbarHostState.showSnackbar(
+                snackbarHostState.showSnackbar(
                     message = message,
                     duration = SnackbarDuration.Short,
-                    actionLabel = loginState.warningAction
                 )
-                loginState.warning = null
-                when (snackbarResult) {
-                    SnackbarResult.Dismissed -> {}
-                    SnackbarResult.ActionPerformed -> when (loginState.warningAction) {
-                        "Register" -> navController?.navigate("ManageUsersView")
-                        "Create a Company" -> navController?.navigate("ManageCompaniesView")
-                        "Settings" -> navController?.navigate("SettingsView")
-                    }
-                }
             }
         }
     }
-    LaunchedEffect(loginState.needLicense) {
-        if (loginState.needLicense) {
-            loginState.needLicense = false
-            navController?.navigate("LicenseView")
-        }
-    }
-    LaunchedEffect(loginState.isLoggedIn) {
-        if (loginState.isLoggedIn) {
-            CoroutineScope(Dispatchers.IO).launch {
-                activityScopedViewModel.activityState.value.isLoggedIn = true
-                activityScopedViewModel.activityState.value.warning = null
-            }
-            withContext(Dispatchers.Main) {
-                loginState.isLoading = false
-                navController?.navigate("HomeView")
 
-            }
-        }
+    fun handleBack() {
+        navController?.navigateUp()
     }
     BackHandler {
-        activityScopedViewModel.finish()
+        handleBack()
     }
     GridLicenseTheme {
-        Scaffold(containerColor = SettingsModel.backgroundColor,
+        Scaffold(
+            containerColor = SettingsModel.backgroundColor,
             snackbarHost = {
                 SnackbarHost(hostState = snackbarHostState)
             },
@@ -138,9 +118,18 @@ fun LoginView(
                     TopAppBar(colors = TopAppBarDefaults.mediumTopAppBarColors(
                         containerColor = SettingsModel.topBarColor
                     ),
+                        navigationIcon = {
+                            IconButton(onClick = { handleBack() }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = SettingsModel.buttonColor
+                                )
+                            }
+                        },
                         title = {
                             Text(
-                                text = "Login",
+                                text = "Users",
                                 color = SettingsModel.textColor,
                                 fontSize = 16.sp,
                                 textAlign = TextAlign.Center
@@ -156,46 +145,54 @@ fun LoginView(
                             }
                         })
                 }
-            }) {
+            }) { it ->
             Box(
                 modifier = modifier
                     .fillMaxSize()
                     .padding(it)
                     .background(color = Color.Transparent)
             ) {
-                Box(
+                Column(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.TopCenter
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .verticalScroll(rememberScrollState()),
+                            .verticalScroll(rememberScrollState())
+                            .weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        SearchableDropdownMenu(
+                            items = usersState.users.toMutableList(),
+                            modifier = Modifier.padding(10.dp),
+                            label = usernameState.ifEmpty { "Select User" },
+                        ) { selectedUser ->
+                            selectedUser as User
+                            usersState.selectedUser = selectedUser
+                            nameState = selectedUser.userName ?: ""
+                            usernameState = selectedUser.userName ?: ""
+                            passwordState = selectedUser.password ?: ""
+                            emailState = selectedUser.email ?: ""
+                            deviceIdState = selectedUser.deviceID ?: ""
+                        }
+
                         UITextField(modifier = Modifier.padding(10.dp),
                             defaultValue = usernameState,
                             label = "Username",
-                            placeHolder = "Username",
-                            onAction = { passwordFocusRequester.requestFocus() }) { username ->
-                            usernameState = username
+                            placeHolder = "Enter Username",
+                            onAction = { passwordFocusRequester.requestFocus() }) {
+                            usernameState = it
+                            usersState.selectedUser.userName = it.trim()
                         }
 
                         UITextField(modifier = Modifier.padding(10.dp),
                             defaultValue = passwordState,
                             label = "Password",
-                            placeHolder = "Password",
+                            placeHolder = "Enter Password",
                             focusRequester = passwordFocusRequester,
                             keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done,
                             visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
-                            onAction = {
-                                keyboardController?.hide()
-                                viewModel.login(
-                                    usernameState.trim(),
-                                    passwordState.trim()
-                                )
-                            },
+                            onAction = { emailFocusRequester.requestFocus() },
                             trailingIcon = {
                                 IconButton(onClick = { passwordVisibility = !passwordVisibility }) {
                                     Icon(
@@ -204,28 +201,83 @@ fun LoginView(
                                         tint = SettingsModel.buttonColor
                                     )
                                 }
-                            }) { password ->
-                            passwordState = password
+                            }) {
+                            passwordState = it
+                            usersState.selectedUser.password = it.trim()
                         }
-                        UIButton(
+
+                        UITextField(modifier = Modifier.padding(10.dp),
+                            defaultValue = nameState,
+                            label = "Email",
+                            placeHolder = "Enter Email",
+                            focusRequester = emailFocusRequester,
+                            onAction = { deviceIdFocusRequester.requestFocus() }) {
+                            emailState = it
+                            usersState.selectedUser.email = it.trim()
+                        }
+
+                        UITextField(modifier = Modifier.padding(10.dp),
+                            defaultValue = nameState,
+                            label = "Device ID",
+                            placeHolder = "Enter Device ID",
+                            focusRequester = deviceIdFocusRequester,
+                            imeAction = ImeAction.Done,
+                            onAction = { keyboardController?.hide() }) {
+                            deviceIdState = it
+                            usersState.selectedUser.deviceID = it.trim()
+                        }
+
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(80.dp)
+                                .wrapContentHeight()
                                 .padding(10.dp),
-                            text = "Log In"
+                            verticalAlignment = Alignment.Bottom
                         ) {
-                            keyboardController?.hide()
-                            viewModel.login(
-                                usernameState.trim(),
-                                passwordState.trim()
-                            )
+                            UIButton(
+                                modifier = Modifier
+                                    .weight(.33f)
+                                    .padding(3.dp),
+                                text = "Save"
+                            ) {
+                                viewModel.saveUser(usersState.selectedUser)
+                            }
+
+                            UIButton(
+                                modifier = Modifier
+                                    .weight(.33f)
+                                    .padding(3.dp),
+                                text = "Delete"
+                            ) {
+                                viewModel.deleteSelectedUser(usersState.selectedUser)
+                            }
+
+                            UIButton(
+                                modifier = Modifier
+                                    .weight(.33f)
+                                    .padding(3.dp),
+                                text = "Close"
+                            ) {
+                                handleBack()
+                            }
                         }
+
                     }
                 }
             }
         }
         LoadingIndicator(
-            show = loginState.isLoading
+            show = usersState.isLoading
         )
+
+        if (usersState.clear) {
+            usersState.selectedUser = User()
+            nameState = ""
+            usernameState = ""
+            passwordState = ""
+            emailState = ""
+            deviceIdState = ""
+            usersState.clear = false
+        }
     }
 }

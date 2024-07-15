@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
+import androidx.compose.ui.graphics.Color
 import com.grid.gridlicense.model.HomeSectionModel
 import java.time.Year
 import java.util.Calendar
@@ -57,6 +58,20 @@ object Utils {
                 else -> new  //new value
             }
         }
+    }
+
+    fun floatToColor(
+            hue: Float,
+            saturation: Float = 1f,
+            brightness: Float = 1f
+    ): Color {
+        // Convert HSV to RGB
+        val hsv = floatArrayOf(
+            hue,
+            saturation,
+            brightness
+        )
+        return Color(android.graphics.Color.HSVToColor(hsv))
     }
 
     fun getDeviceID(context: Context): String {

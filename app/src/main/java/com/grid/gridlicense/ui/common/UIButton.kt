@@ -1,4 +1,4 @@
-package com.grid.pos.ui.common
+package com.grid.gridlicense.ui.common
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape

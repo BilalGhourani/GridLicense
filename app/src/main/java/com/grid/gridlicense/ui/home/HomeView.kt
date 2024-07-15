@@ -44,8 +44,8 @@ import com.grid.gridlicense.model.Event
 import com.grid.gridlicense.model.SettingsModel
 import com.grid.gridlicense.ui.theme.GridLicenseTheme
 import com.grid.gridlicense.utils.Utils
-import com.grid.pos.ui.common.UIAlertDialog
-import com.grid.pos.ui.common.UIButton
+import com.grid.gridlicense.ui.common.UIAlertDialog
+import com.grid.gridlicense.ui.common.UIButton
 
 @OptIn(
     ExperimentalMaterial3Api::class

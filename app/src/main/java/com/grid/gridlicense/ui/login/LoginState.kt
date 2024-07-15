@@ -1,7 +1,7 @@
 package com.grid.gridlicense.ui.login
 
+import com.grid.gridlicense.data.user.User
 import com.grid.gridlicense.model.Event
-import com.grid.pos.data.User.User
 
 data class LoginState(
         var selectedUser: User = User(),

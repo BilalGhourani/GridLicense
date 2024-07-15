@@ -1,4 +1,4 @@
-package com.grid.pos.data.license
+package com.grid.gridlicense.data.license
 
 import com.grid.gridlicense.data.DataModel
 import com.grid.gridlicense.utils.Utils

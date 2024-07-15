@@ -3,6 +3,7 @@ package com.grid.gridlicense
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.grid.gridlicense.model.LicenseModel
 import com.grid.gridlicense.model.SettingsModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -18,6 +19,8 @@ class ActivityScopedViewModel @Inject constructor() : ViewModel() {
 
     private val _activityState = MutableStateFlow(ActivityState())
     val activityState: MutableStateFlow<ActivityState> = _activityState
+
+    var addedLicenseModel: LicenseModel? = null
 
     fun finish() {
         viewModelScope.launch {
@@ -37,6 +40,10 @@ class ActivityScopedViewModel @Inject constructor() : ViewModel() {
         viewModelScope.launch {
             _mainActivityEvent.send(ActivityScopedUIEvent.StartChooserActivity(intent))
         }
+    }
+
+    fun isLoggedIn(): Boolean {
+        return activityState.value.isLoggedIn
     }
 
     fun logout() {

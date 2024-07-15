@@ -1,4 +1,4 @@
-package com.grid.gridlicense.ui.license
+package com.grid.gridlicense.ui.license.manage
 
 import android.content.Intent
 import androidx.activity.compose.BackHandler
@@ -59,10 +59,10 @@ import com.grid.gridlicense.ui.theme.GridLicenseTheme
 import com.grid.gridlicense.ui.theme.LightBlue
 import com.grid.gridlicense.utils.DateHelper
 import com.grid.gridlicense.utils.Utils
-import com.grid.pos.ui.common.LoadingIndicator
-import com.grid.pos.ui.common.UIAlertDialog
-import com.grid.pos.ui.common.UIButton
-import com.grid.pos.ui.common.UITextField
+import com.grid.gridlicense.ui.common.LoadingIndicator
+import com.grid.gridlicense.ui.common.UIAlertDialog
+import com.grid.gridlicense.ui.common.UIButton
+import com.grid.gridlicense.ui.common.UITextField
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
@@ -144,11 +144,6 @@ fun LicenseView(
                     duration = SnackbarDuration.Short,
                 )
             }
-        }
-
-        if (licenseState.isDone) {
-            licenseState.isDone = false
-            shareExcelSheet(Intent.ACTION_SEND)
         }
     }
 
@@ -241,7 +236,10 @@ fun LicenseView(
                         onAction = {
                             keyboardController?.hide()
                         }) { days ->
-                        rtaDaysState = Utils.getIntValue(days,rtaDaysState)
+                        rtaDaysState = Utils.getIntValue(
+                            days,
+                            rtaDaysState
+                        )
                     }
                 }
 
@@ -250,22 +248,26 @@ fun LicenseView(
                         .fillMaxWidth()
                         .height(70.dp)
                         .padding(10.dp),
-                    text = "Generate"
+                    text = if (licenseState.isDone) "Share" else "Save"
                 ) {
-                    val date = getDateFromState(expiryDatePickerState.selectedDateMillis!!)
-                    val expiryDate = DateHelper.editDate(
-                        date,
-                        0,
-                        0,
-                        0
-                    )
-                    viewModel.generate(
-                        context,
-                        deviceIdState,
-                        expiryDate,
-                        isRtaState,
-                        rtaDaysState
-                    )
+                    if (licenseState.isDone) {
+                        shareExcelSheet(Intent.ACTION_SEND)
+                    } else {
+                        val date = getDateFromState(expiryDatePickerState.selectedDateMillis!!)
+                        val expiryDate = DateHelper.editDate(
+                            date,
+                            0,
+                            0,
+                            0
+                        )
+                        viewModel.generate(
+                            context,
+                            deviceIdState,
+                            expiryDate,
+                            isRtaState,
+                            rtaDaysState
+                        )
+                    }
                 }
             }
         }

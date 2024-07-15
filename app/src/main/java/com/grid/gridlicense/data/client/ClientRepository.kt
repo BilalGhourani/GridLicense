@@ -1,6 +1,4 @@
-package com.grid.pos.data.client
-
-import com.grid.pos.data.User.Client
+package com.grid.gridlicense.data.client
 
 interface ClientRepository {
 
@@ -8,13 +6,13 @@ interface ClientRepository {
     // instead of having a callback we can just wait till insert is done
     suspend fun insert(client: Client): Client
 
-    // Delete an User
+    // Delete an Client
     suspend fun delete(client: Client)
 
-    // Update an User
+    // Update an Client
     suspend fun update(client: Client)
 
 
-    // Get all Users as stream.
+    // Get all Clients as stream.
     suspend fun getAllClients(): MutableList<Client>
 }

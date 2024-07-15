@@ -1,14 +1,14 @@
-package com.grid.pos.data.client
+package com.grid.gridlicense.data.client
 
 import com.grid.gridlicense.data.DataModel
 import com.grid.gridlicense.utils.Utils
 
 data class Client(
         var clientid: String,
-        var name: String? = null,
-        var email: String? = null,
-        var phone: String? = null,
-        var country: String? = null,
+        var clientName: String? = null,
+        var clientEmail: String? = null,
+        var clientPhone: String? = null,
+        var clientCountry: String? = null,
         ) : DataModel() {
     constructor() : this("")
 
@@ -17,7 +17,7 @@ data class Client(
     }
 
     override fun getName(): String {
-        return name ?: ""
+        return clientName ?: ""
     }
 
     override fun isNew(): Boolean {

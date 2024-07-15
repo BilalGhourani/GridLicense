@@ -1,4 +1,4 @@
-package com.grid.gridlicense.ui.users
+package com.grid.gridlicense.ui.clients
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -13,8 +13,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
@@ -43,54 +40,47 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.grid.gridlicense.ActivityScopedViewModel
 import com.grid.gridlicense.R
 import com.grid.gridlicense.model.SettingsModel
 import com.grid.gridlicense.ui.common.SearchableDropdownMenu
 import com.grid.gridlicense.ui.theme.GridLicenseTheme
-import com.grid.pos.data.user.User
-import com.grid.pos.ui.common.LoadingIndicator
-import com.grid.pos.ui.common.UIButton
-import com.grid.pos.ui.common.UITextField
+import com.grid.gridlicense.data.client.Client
+import com.grid.gridlicense.ui.common.LoadingIndicator
+import com.grid.gridlicense.ui.common.UIButton
+import com.grid.gridlicense.ui.common.UITextField
 import kotlinx.coroutines.launch
 
 @OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalComposeUiApi::class
+    ExperimentalMaterial3Api::class
 )
 @Composable
-fun ManageUsersView(
+fun ClientsView(
         navController: NavController? = null,
         modifier: Modifier = Modifier,
-        activityScopedViewModel: ActivityScopedViewModel,
-        viewModel: ManageUsersViewModel = hiltViewModel()
+        viewModel: ClientsViewModel = hiltViewModel()
 ) {
-    val manageUsersState: ManageUsersState by viewModel.manageUsersState.collectAsState(
-        ManageUsersState()
+    val clientsState: ClientsState by viewModel.clientsState.collectAsState(
+        ClientsState()
     )
     val keyboardController = LocalSoftwareKeyboardController.current
-    val passwordFocusRequester = remember { FocusRequester() }
     val emailFocusRequester = remember { FocusRequester() }
-    val deviceIdFocusRequester = remember { FocusRequester() }
+    val phoneFocusRequester = remember { FocusRequester() }
+    val countryFocusRequester = remember { FocusRequester() }
 
     var nameState by remember { mutableStateOf("") }
-    var usernameState by remember { mutableStateOf("") }
-    var passwordState by remember { mutableStateOf("") }
     var emailState by remember { mutableStateOf("") }
-    var deviceIdState by remember { mutableStateOf("") }
-    var passwordVisibility by remember { mutableStateOf(false) }
+    var phoneState by remember { mutableStateOf("") }
+    var countryState by remember { mutableStateOf("") }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    LaunchedEffect(manageUsersState.warning) {
-        manageUsersState.warning?.value?.let { message ->
+    LaunchedEffect(clientsState.warning) {
+        clientsState.warning?.value?.let { message ->
             scope.launch {
                 snackbarHostState.showSnackbar(
                     message = message,
@@ -107,8 +97,7 @@ fun ManageUsersView(
         handleBack()
     }
     GridLicenseTheme {
-        Scaffold(
-            containerColor = SettingsModel.backgroundColor,
+        Scaffold(containerColor = SettingsModel.backgroundColor,
             snackbarHost = {
                 SnackbarHost(hostState = snackbarHostState)
             },
@@ -131,7 +120,7 @@ fun ManageUsersView(
                         },
                         title = {
                             Text(
-                                text = "Manage Users",
+                                text = "Clients",
                                 color = SettingsModel.textColor,
                                 fontSize = 16.sp,
                                 textAlign = TextAlign.Center
@@ -165,68 +154,57 @@ fun ManageUsersView(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         SearchableDropdownMenu(
-                            items = manageUsersState.users.toMutableList(),
+                            items = clientsState.clients.toMutableList(),
                             modifier = Modifier.padding(10.dp),
-                            label = usernameState.ifEmpty { "Select User" },
-                        ) { selectedUser ->
-                            selectedUser as User
-                            manageUsersState.selectedUser = selectedUser
-                            nameState = selectedUser.userName ?: ""
-                            usernameState = selectedUser.userName ?: ""
-                            passwordState = selectedUser.password ?: ""
-                            emailState = selectedUser.email ?: ""
-                            deviceIdState = selectedUser.deviceID ?: ""
-                        }
-
-                        UITextField(modifier = Modifier.padding(10.dp),
-                            defaultValue = usernameState,
-                            label = "Username",
-                            placeHolder = "Enter Username",
-                            onAction = { passwordFocusRequester.requestFocus() }) {
-                            usernameState = it
-                            manageUsersState.selectedUser.userName = it.trim()
-                        }
-
-                        UITextField(modifier = Modifier.padding(10.dp),
-                            defaultValue = passwordState,
-                            label = "Password",
-                            placeHolder = "Enter Password",
-                            focusRequester = passwordFocusRequester,
-                            keyboardType = KeyboardType.Password,
-                            visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
-                            onAction = { emailFocusRequester.requestFocus() },
-                            trailingIcon = {
-                                IconButton(onClick = { passwordVisibility = !passwordVisibility }) {
-                                    Icon(
-                                        imageVector = if (passwordVisibility) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                        contentDescription = if (passwordVisibility) "Hide password" else "Show password",
-                                        tint = SettingsModel.buttonColor
-                                    )
-                                }
-                            }) {
-                            passwordState = it
-                            manageUsersState.selectedUser.password = it.trim()
+                            label = nameState.ifEmpty { "Select Client" },
+                        ) { selectedClient ->
+                            selectedClient as Client
+                            clientsState.selectedClient = selectedClient
+                            nameState = selectedClient.clientName ?: ""
+                            emailState = selectedClient.clientEmail ?: ""
+                            phoneState = selectedClient.clientPhone ?: ""
+                            countryState = selectedClient.clientCountry ?: ""
                         }
 
                         UITextField(modifier = Modifier.padding(10.dp),
                             defaultValue = nameState,
-                            label = "Email",
-                            placeHolder = "Enter Email",
+                            label = "Name",
+                            placeHolder = "Enter Name",
+                            onAction = { emailFocusRequester.requestFocus() }) {
+                            nameState = it
+                            clientsState.selectedClient.clientName = it.trim()
+                        }
+
+                        UITextField(modifier = Modifier.padding(10.dp),
+                            defaultValue = emailState,
+                            label = "Email Address",
+                            placeHolder = "Enter Email Address",
                             focusRequester = emailFocusRequester,
-                            onAction = { deviceIdFocusRequester.requestFocus() }) {
+                            onAction = { phoneFocusRequester.requestFocus() }) {
                             emailState = it
-                            manageUsersState.selectedUser.email = it.trim()
+                            clientsState.selectedClient.clientEmail = it.trim()
+                        }
+
+                        UITextField(modifier = Modifier.padding(10.dp),
+                            defaultValue = phoneState,
+                            label = "Phone Number",
+                            placeHolder = "Enter Phone Number",
+                            keyboardType = KeyboardType.Number,
+                            focusRequester = phoneFocusRequester,
+                            onAction = { countryFocusRequester.requestFocus() }) {
+                            phoneState = it
+                            clientsState.selectedClient.clientPhone = it.trim()
                         }
 
                         UITextField(modifier = Modifier.padding(10.dp),
                             defaultValue = nameState,
-                            label = "Device ID",
-                            placeHolder = "Enter Device ID",
-                            focusRequester = deviceIdFocusRequester,
+                            label = "Country",
+                            placeHolder = "Enter Country",
+                            focusRequester = countryFocusRequester,
                             imeAction = ImeAction.Done,
                             onAction = { keyboardController?.hide() }) {
-                            deviceIdState = it
-                            manageUsersState.selectedUser.deviceID = it.trim()
+                            countryState = it
+                            clientsState.selectedClient.clientCountry = it.trim()
                         }
 
                         Row(
@@ -242,7 +220,7 @@ fun ManageUsersView(
                                     .padding(3.dp),
                                 text = "Save"
                             ) {
-                                viewModel.saveUser(manageUsersState.selectedUser)
+                                viewModel.saveClient(clientsState.selectedClient)
                             }
 
                             UIButton(
@@ -251,7 +229,7 @@ fun ManageUsersView(
                                     .padding(3.dp),
                                 text = "Delete"
                             ) {
-                                viewModel.deleteSelectedUser(manageUsersState.selectedUser)
+                                viewModel.deleteSelectedClient(clientsState.selectedClient)
                             }
 
                             UIButton(
@@ -269,17 +247,16 @@ fun ManageUsersView(
             }
         }
         LoadingIndicator(
-            show = manageUsersState.isLoading
+            show = clientsState.isLoading
         )
 
-        if (manageUsersState.clear) {
-            manageUsersState.selectedUser = User()
+        if (clientsState.clear) {
+            clientsState.selectedClient = Client()
             nameState = ""
-            usernameState = ""
-            passwordState = ""
+            phoneState = ""
             emailState = ""
-            deviceIdState = ""
-            manageUsersState.clear = false
+            countryState = ""
+            clientsState.clear = false
         }
     }
 }

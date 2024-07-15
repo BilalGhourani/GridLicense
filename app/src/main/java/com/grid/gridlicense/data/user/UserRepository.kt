@@ -1,4 +1,4 @@
-package com.grid.pos.data.user
+package com.grid.gridlicense.data.user
 
 interface UserRepository {
 

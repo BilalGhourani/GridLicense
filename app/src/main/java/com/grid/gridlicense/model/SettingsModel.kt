@@ -1,7 +1,7 @@
 package com.grid.gridlicense.model
 
 import androidx.compose.ui.graphics.Color
-import com.grid.pos.data.User.User
+import com.grid.gridlicense.data.user.User
 
 object SettingsModel {
     var buttonColor: Color = Color.Blue

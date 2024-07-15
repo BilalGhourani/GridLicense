@@ -1,4 +1,4 @@
-package com.grid.pos.ui.common
+package com.grid.gridlicense.ui.common
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn

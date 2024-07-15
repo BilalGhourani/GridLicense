@@ -3,8 +3,8 @@ package com.grid.gridlicense.ui.users
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.grid.gridlicense.model.Event
-import com.grid.pos.data.user.User
-import com.grid.pos.data.user.UserRepository
+import com.grid.gridlicense.data.user.User
+import com.grid.gridlicense.data.user.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -13,12 +13,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ManageUsersViewModel @Inject constructor(
+class UsersViewModel @Inject constructor(
         private val userRepository: UserRepository
 ) : ViewModel() {
 
-    private val _manageUsersState = MutableStateFlow(ManageUsersState())
-    val manageUsersState: MutableStateFlow<ManageUsersState> = _manageUsersState
+    private val _UsersState = MutableStateFlow(UsersState())
+    val usersState: MutableStateFlow<UsersState> = _UsersState
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -29,7 +29,7 @@ class ManageUsersViewModel @Inject constructor(
     private suspend fun fetchUsers() {
         val listOfUsers =  userRepository.getAllUsers()
         viewModelScope.launch(Dispatchers.Main) {
-            manageUsersState.value = manageUsersState.value.copy(
+            usersState.value = usersState.value.copy(
                 users = listOfUsers
             )
         }
@@ -37,13 +37,13 @@ class ManageUsersViewModel @Inject constructor(
 
     fun saveUser(user: User) {
         if (user.userName.isNullOrEmpty() || user.password.isNullOrEmpty()) {
-            manageUsersState.value = manageUsersState.value.copy(
+            usersState.value = usersState.value.copy(
                 warning = Event("Please fill all inputs"),
                 isLoading = false
             )
             return
         }
-        manageUsersState.value = manageUsersState.value.copy(
+        usersState.value = usersState.value.copy(
             isLoading = true
         )
         val isInserting = user.isNew()
@@ -51,10 +51,10 @@ class ManageUsersViewModel @Inject constructor(
             if (isInserting) {
                 user.prepareForInsert()
                 val addedModel = userRepository.insert(user)
-                val users = manageUsersState.value.users
+                val users = usersState.value.users
                 users.add(addedModel)
                 viewModelScope.launch(Dispatchers.Main) {
-                    manageUsersState.value = manageUsersState.value.copy(
+                    usersState.value = usersState.value.copy(
                         users = users,
                         selectedUser = addedModel,
                         isLoading = false,
@@ -64,7 +64,7 @@ class ManageUsersViewModel @Inject constructor(
             } else {
                 userRepository.update(user)
                 viewModelScope.launch(Dispatchers.Main) {
-                    manageUsersState.value = manageUsersState.value.copy(
+                    usersState.value = usersState.value.copy(
                         selectedUser = user,
                         isLoading = false,
                         clear = true
@@ -76,23 +76,23 @@ class ManageUsersViewModel @Inject constructor(
 
     fun deleteSelectedUser(user: User) {
         if (user.userId.isEmpty()) {
-            manageUsersState.value = manageUsersState.value.copy(
+            usersState.value = usersState.value.copy(
                 warning = Event("Please select an user to delete"),
                 isLoading = false
             )
             return
         }
-        manageUsersState.value = manageUsersState.value.copy(
+        usersState.value = usersState.value.copy(
             warning = null,
             isLoading = true
         )
 
         CoroutineScope(Dispatchers.IO).launch {
             userRepository.delete(user)
-            val users = manageUsersState.value.users
+            val users = usersState.value.users
             users.remove(user)
             viewModelScope.launch(Dispatchers.Main) {
-                manageUsersState.value = manageUsersState.value.copy(
+                usersState.value = usersState.value.copy(
                     users = users,
                     selectedUser = User(),
                     isLoading = false,

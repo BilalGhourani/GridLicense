@@ -1,4 +1,6 @@
-package com.grid.pos.data.license
+package com.grid.gridlicense.data.license
+
+import com.grid.gridlicense.model.LicenseModel
 
 interface LicenseRepository {
 
@@ -6,13 +8,16 @@ interface LicenseRepository {
     // instead of having a callback we can just wait till insert is done
     suspend fun insert(license: License): License
 
-    // Delete an User
+    // Delete an License
     suspend fun delete(license: License)
 
-    // Update an User
+    // Update an License
     suspend fun update(license: License)
 
 
-    // Get all Users as stream.
+    // Get all Licenses as stream.
     suspend fun getAllLicenses(): MutableList<License>
+
+    // Get all License Models with as stream.
+    suspend fun getAllLicenseModels(): MutableList<LicenseModel>
 }

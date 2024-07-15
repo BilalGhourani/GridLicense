@@ -1,9 +1,9 @@
 package com.grid.gridlicense.ui.users
 
 import com.grid.gridlicense.model.Event
-import com.grid.pos.data.user.User
+import com.grid.gridlicense.data.user.User
 
-data class ManageUsersState(
+data class UsersState(
         val users: MutableList<User> = mutableListOf(),
         var selectedUser: User = User(),
         val isLoading: Boolean = false,
