@@ -18,9 +18,9 @@ data class License(
         var isRta: Boolean = false,
         var rtaDays: String? = null,
         var createduser: String? = null,
-        var createddate: Timestamp? = null,
+        var createddate: Date? = null,
         var userstamp: String? = null,
-        var timestamp: Timestamp? = null,
+        var timestamp: Date? = null,
 ) : DataModel() {
     constructor() : this("")
 
@@ -42,13 +42,7 @@ data class License(
         }
         createduser = SettingsModel.currentUser?.userId ?: ""
         userstamp = SettingsModel.currentUser?.userId ?: ""
-        val timestp =  Timestamp.valueOf(
-            DateHelper.getDateInFormat(
-                Date(),
-                "yyyy-MM-dd HH:mm:ss"
-            )
-        )
-        createddate = timestp
-        timestamp = timestp
+        createddate = Date()
+        timestamp = Date()
     }
 }
