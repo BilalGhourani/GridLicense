@@ -54,7 +54,7 @@ class LicenseViewModel @Inject constructor(
         )
     }
 
-    fun saveClient(license: License) {
+    fun saveLicense(context: Context,license: License) {
         if (license.cltid.isNullOrEmpty()) {
             showError("select a client!")
             return
@@ -67,13 +67,8 @@ class LicenseViewModel @Inject constructor(
         CoroutineScope(Dispatchers.IO).launch {
             if (isInserting) {
                 license.prepareForInsert()
-                val addedModel = licenseRepository.insert(license)
                 viewModelScope.launch(Dispatchers.Main) {
-                    state.value = state.value.copy(
-                        selectedLicense = addedModel,
-                        isLoading = false,
-                        clear = true
-                    )
+                    generate(context,license)
                 }
             } else {
                 licenseRepository.update(license)
@@ -90,25 +85,25 @@ class LicenseViewModel @Inject constructor(
 
     fun generate(
             context: Context,
-            deviceID: String,
-            expiryDate: Date,
-            isRta: Boolean,
-            rtaDays: String,
+            license: License
     ) {
         state.value = state.value.copy(
             isLoading = true
         )
         viewModelScope.launch(Dispatchers.IO) {
             val sep = "\\$@$\\"
+            val deviceID = license.deviseid
             val dateString = DateHelper.getDateInFormat(
-                expiryDate,
+                license.expirydate!!,
                 "yyyyMMdd"
             )
-            val rtaStr = if (isRta) "1" else "0"
-            val licenseString = if (rtaDays.isNotEmpty()) {
-                "$deviceID$sep$dateString$sep$rtaStr$sep$rtaDays"
-            } else {
+            val rtaStr = if (license.isRta) "1" else "0"
+            val rtaDays = license.rtaDays
+            val licenseString = if (rtaDays.isNullOrEmpty()) {
                 "$deviceID$sep$dateString$sep$rtaStr"
+            } else {
+
+                "$deviceID$sep$dateString$sep$rtaStr$sep$rtaDays"
             }
 
             val encryptedOutput = CryptoUtils.encrypt(

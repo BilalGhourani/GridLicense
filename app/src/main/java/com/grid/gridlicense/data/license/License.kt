@@ -12,6 +12,8 @@ data class License(
         var module: String? = null,
         var expirydatemessage: Boolean = false,
         var expirydate: Date? = null,
+        var isRta: Boolean = false,
+        var rtaDays: String? = null,
         var createduser: String? = null,
         var createddate: Date? = null,
         var userstamp: String? = null,

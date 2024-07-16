@@ -55,7 +55,7 @@ object SQLServerWrapper {
             while (resultSet.next()) {
                 val obj = JSONObject()
                 for (columnName in columns) {
-                    val columnValue = resultSet.getObject(columnName)
+                    val columnValue = resultSet.getString(columnName)
                     obj.put(
                         columnName,
                         columnValue

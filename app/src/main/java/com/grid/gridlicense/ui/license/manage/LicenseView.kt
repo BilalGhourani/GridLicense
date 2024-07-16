@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
@@ -39,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -54,6 +57,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.grid.gridlicense.ActivityScopedViewModel
 import com.grid.gridlicense.BuildConfig
+import com.grid.gridlicense.data.client.Client
 import com.grid.gridlicense.model.SettingsModel
 import com.grid.gridlicense.ui.common.UISwitch
 import com.grid.gridlicense.ui.theme.GridLicenseTheme
@@ -61,6 +65,7 @@ import com.grid.gridlicense.ui.theme.LightBlue
 import com.grid.gridlicense.utils.DateHelper
 import com.grid.gridlicense.utils.Utils
 import com.grid.gridlicense.ui.common.LoadingIndicator
+import com.grid.gridlicense.ui.common.SearchableDropdownMenu
 import com.grid.gridlicense.ui.common.UIAlertDialog
 import com.grid.gridlicense.ui.common.UIButton
 import com.grid.gridlicense.ui.common.UITextField
@@ -82,6 +87,8 @@ fun LicenseView(
 
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val deviceIdFocusRequester = remember { FocusRequester() }
+    val moduleFocusRequester = remember { FocusRequester() }
 
     fun getDateFromState(time: Long): Date {
         return Calendar.getInstance().apply {
@@ -115,7 +122,10 @@ fun LicenseView(
 
     val initialDate = Date()
 
+    var clientIdState by remember { mutableStateOf("") }
+    var companyState by remember { mutableStateOf("") }
     var deviceIdState by remember { mutableStateOf("") }
+    var moduleState by remember { mutableStateOf("") }
     val expiryDatePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDate.time)
     var expiryDateState by remember {
         mutableStateOf(
@@ -125,6 +135,7 @@ fun LicenseView(
             )
         )
     }
+    var expiryDateMessageState by remember { mutableStateOf(false) }
     var isRtaState by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var isPopupVisible by remember { mutableStateOf(false) }
@@ -181,7 +192,7 @@ fun LicenseView(
                         },
                         title = {
                             Text(
-                                text = "License",
+                                text = "Manage License",
                                 color = SettingsModel.textColor,
                                 fontSize = 16.sp,
                                 textAlign = TextAlign.Center
@@ -190,8 +201,31 @@ fun LicenseView(
                 }
             }) {
             Column(
-                modifier = modifier.padding(it)
+                modifier = modifier.padding(it).verticalScroll(rememberScrollState())
             ) {
+
+                SearchableDropdownMenu(
+                    items = licenseState.clients.toMutableList(),
+                    modifier = Modifier.padding(10.dp),
+                    label = "Select Client",
+                    selectedId = clientIdState
+                ) { selectedClient ->
+                    selectedClient as Client
+                    clientIdState = selectedClient.clientid
+                    licenseState.selectedLicense.cltid = selectedClient.clientid
+                }
+
+                UITextField(modifier = Modifier.padding(10.dp),
+                    defaultValue = companyState,
+                    label = "Company",
+                    keyboardType = KeyboardType.Text,
+                    placeHolder = "Company",
+                    onAction = {
+                        deviceIdFocusRequester.requestFocus()
+                    }) { comp ->
+                    companyState = comp.trim()
+                    licenseState.selectedLicense.company = companyState
+                }
 
                 UITextField(modifier = Modifier.padding(10.dp),
                     defaultValue = deviceIdState,
@@ -199,10 +233,34 @@ fun LicenseView(
                     maxLines = 2,
                     keyboardType = KeyboardType.Text,
                     placeHolder = "device id",
+                    focusRequester = deviceIdFocusRequester,
+                    onAction = {
+                        moduleFocusRequester.requestFocus()
+                    }) { devId ->
+                    deviceIdState = devId.trim()
+                    licenseState.selectedLicense.deviseid = deviceIdState
+                }
+
+                UITextField(modifier = Modifier.padding(10.dp),
+                    defaultValue = moduleState,
+                    label = "Module",
+                    keyboardType = KeyboardType.Text,
+                    placeHolder = "Module",
+                    focusRequester = moduleFocusRequester,
                     onAction = {
                         keyboardController?.hide()
-                    }) { devId ->
-                    deviceIdState = devId
+                    }) { module ->
+                    moduleState = module.trim()
+                    licenseState.selectedLicense.module = moduleState
+                }
+
+                UISwitch(
+                    modifier = Modifier.padding(10.dp),
+                    checked = expiryDateMessageState,
+                    text = "Expiry date message",
+                ) { exdm ->
+                    expiryDateMessageState = exdm
+                    licenseState.selectedLicense.expirydatemessage = exdm
                 }
 
                 UITextField(modifier = Modifier.padding(10.dp),
@@ -227,6 +285,17 @@ fun LicenseView(
                         }
                     }) { date ->
                     expiryDateState = date
+                    val expDate = DateHelper.getDateFromString(
+                        date,
+                        "yyyy-MM-dd"
+                    )
+                    val expiryDate = DateHelper.editDate(
+                        expDate,
+                        0,
+                        0,
+                        0
+                    )
+                    licenseState.selectedLicense.expirydate = expiryDate
                 }
 
                 UISwitch(
@@ -235,6 +304,7 @@ fun LicenseView(
                     text = "is RTA",
                 ) { isRta ->
                     isRtaState = isRta
+                    licenseState.selectedLicense.isRta = isRta
                 }
 
                 if (isRtaState) {
@@ -250,6 +320,7 @@ fun LicenseView(
                             days,
                             rtaDaysState
                         )
+                        licenseState.selectedLicense.rtaDays = rtaDaysState
                     }
                 }
 
@@ -270,12 +341,10 @@ fun LicenseView(
                             0,
                             0
                         )
+                        licenseState.selectedLicense.expirydate = expiryDate
                         viewModel.generate(
                             context,
-                            deviceIdState,
-                            expiryDate,
-                            isRtaState,
-                            rtaDaysState
+                            licenseState.selectedLicense
                         )
                     }
                 }
