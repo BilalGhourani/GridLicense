@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -56,7 +58,8 @@ import com.grid.gridlicense.ui.common.LoadingIndicator
 import com.grid.gridlicense.ui.common.UIButton
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class,
+@OptIn(
+    ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class
 )
 @Composable
@@ -144,6 +147,15 @@ fun LicensesListView(
                     color = SettingsModel.backgroundColor
                 ) {
                     TopAppBar(colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = SettingsModel.topBarColor),
+                        navigationIcon = {
+                            IconButton(onClick = { handleBack() }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = SettingsModel.buttonColor
+                                )
+                            }
+                        },
                         title = {
                             Text(
                                 text = "Licenses List",
@@ -212,10 +224,14 @@ fun LicensesListView(
                                 isLandscape = isLandscape,
                                 index = index,
                                 onEdit = {
-                                    viewModel.generate(context,
-                                    licenseModel.license.deviseid!!,
+                                    viewModel.generate(
+                                        context,
+                                        licenseModel.license.deviseid!!,
                                         licenseModel.license.expirydate!!,
-                                        false,"0") },
+                                        false,
+                                        "0"
+                                    )
+                                },
                                 onRemove = { viewModel.deleteLicense(licenseModel) })
                         }
                     }

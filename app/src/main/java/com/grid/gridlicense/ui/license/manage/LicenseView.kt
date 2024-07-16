@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.DatePicker
@@ -169,6 +170,15 @@ fun LicenseView(
                     color = SettingsModel.backgroundColor
                 ) {
                     TopAppBar(colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = SettingsModel.topBarColor),
+                        navigationIcon = {
+                            IconButton(onClick = { handleBack() }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = SettingsModel.buttonColor
+                                )
+                            }
+                        },
                         title = {
                             Text(
                                 text = "License",
