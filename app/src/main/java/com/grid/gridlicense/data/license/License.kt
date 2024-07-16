@@ -1,7 +1,10 @@
 package com.grid.gridlicense.data.license
 
 import com.grid.gridlicense.data.DataModel
+import com.grid.gridlicense.model.SettingsModel
+import com.grid.gridlicense.utils.DateHelper
 import com.grid.gridlicense.utils.Utils
+import java.sql.Timestamp
 import java.util.Date
 
 data class License(
@@ -15,10 +18,10 @@ data class License(
         var isRta: Boolean = false,
         var rtaDays: String? = null,
         var createduser: String? = null,
-        var createddate: Date? = null,
+        var createddate: Timestamp? = null,
         var userstamp: String? = null,
-        var timestamp: Date? = null,
-        ) : DataModel() {
+        var timestamp: Timestamp? = null,
+) : DataModel() {
     constructor() : this("")
 
     override fun getId(): String {
@@ -37,5 +40,15 @@ data class License(
         if (licenseid.isEmpty()) {
             licenseid = Utils.generateRandomUuidString()
         }
+        createduser = SettingsModel.currentUser?.userId ?: ""
+        userstamp = SettingsModel.currentUser?.userId ?: ""
+        val timestp =  Timestamp.valueOf(
+            DateHelper.getDateInFormat(
+                Date(),
+                "yyyy-MM-dd HH:mm:ss"
+            )
+        )
+        createddate = timestp
+        timestamp = timestp
     }
 }
