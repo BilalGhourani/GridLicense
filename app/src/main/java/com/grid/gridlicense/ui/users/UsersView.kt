@@ -207,7 +207,7 @@ fun UsersView(
                         }
 
                         UITextField(modifier = Modifier.padding(10.dp),
-                            defaultValue = nameState,
+                            defaultValue = emailState,
                             label = "Email",
                             placeHolder = "Enter Email",
                             focusRequester = emailFocusRequester,
@@ -217,7 +217,7 @@ fun UsersView(
                         }
 
                         UITextField(modifier = Modifier.padding(10.dp),
-                            defaultValue = nameState,
+                            defaultValue = deviceIdState,
                             label = "Device ID",
                             placeHolder = "Enter Device ID",
                             focusRequester = deviceIdFocusRequester,

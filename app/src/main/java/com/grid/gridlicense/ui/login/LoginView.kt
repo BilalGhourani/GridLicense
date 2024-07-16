@@ -86,20 +86,12 @@ fun LoginView(
     LaunchedEffect(loginState.warning) {
         loginState.warning?.value?.let { message ->
             scope.launch {
-                val snackbarResult = snackbarHostState.showSnackbar(
+                snackbarHostState.showSnackbar(
                     message = message,
                     duration = SnackbarDuration.Short,
                     actionLabel = loginState.warningAction
                 )
                 loginState.warning = null
-                when (snackbarResult) {
-                    SnackbarResult.Dismissed -> {}
-                    SnackbarResult.ActionPerformed -> when (loginState.warningAction) {
-                        "Register" -> navController?.navigate("ManageUsersView")
-                        "Create a Company" -> navController?.navigate("ManageCompaniesView")
-                        "Settings" -> navController?.navigate("SettingsView")
-                    }
-                }
             }
         }
     }

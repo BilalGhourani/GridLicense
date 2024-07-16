@@ -16,15 +16,15 @@ object Utils {
     val homeViewList = mutableListOf(
         HomeSectionModel(
             "Users",
-            "ManageUsersView"
+            "UsersView"
         ),
         HomeSectionModel(
             "Clients",
-            "ManageClientsView"
+            "ClientsView"
         ),
         HomeSectionModel(
             "Licenses",
-            "ManageLicensesView"
+            "LicensesListView"
         )
     )
 

@@ -197,7 +197,7 @@ fun ClientsView(
                         }
 
                         UITextField(modifier = Modifier.padding(10.dp),
-                            defaultValue = nameState,
+                            defaultValue = countryState,
                             label = "Country",
                             placeHolder = "Enter Country",
                             focusRequester = countryFocusRequester,
