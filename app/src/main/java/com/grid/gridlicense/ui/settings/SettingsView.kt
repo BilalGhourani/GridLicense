@@ -393,28 +393,6 @@ fun SettingsView(
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
-                UIButton(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(70.dp)
-                        .padding(10.dp),
-                    text = "App Settings",
-                    buttonColor = buttonColorState,
-                    textColor = buttonTextColorState
-                ) {
-                    activityScopedViewModel.openAppStorageSettings()
-                }
-                UIButton(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(70.dp)
-                        .padding(10.dp),
-                    text = "Backup",
-                    buttonColor = buttonColorState,
-                    textColor = buttonTextColorState
-                ) {
-                    navController?.navigate("BackupView")
-                }
                 if (isLoggedId) {
                     UIButton(
                         modifier = Modifier
