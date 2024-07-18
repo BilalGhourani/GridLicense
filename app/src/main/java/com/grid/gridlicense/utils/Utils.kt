@@ -6,6 +6,8 @@ import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.grid.gridlicense.model.HomeSectionModel
 import java.time.Year
 import java.util.Calendar
@@ -34,6 +36,18 @@ object Utils {
 
     fun isTablet(configuration: Configuration): Boolean {
         return configuration.screenWidthDp > 840
+    }
+
+    fun getListHeight(
+            listSize: Int = 0,
+            cellHeight: Int,
+            min: Int = 1,
+            max: Int = 8
+    ): Dp {
+        var size = listSize
+        if (size < min) size = min
+        else if (size > max) size = max
+        return (size * cellHeight).dp + 50.dp
     }
 
     fun getCurrentYear(): String {

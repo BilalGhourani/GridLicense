@@ -105,8 +105,7 @@ fun UsersView(
         handleBack()
     }
     GridLicenseTheme {
-        Scaffold(
-            containerColor = SettingsModel.backgroundColor,
+        Scaffold(containerColor = SettingsModel.backgroundColor,
             snackbarHost = {
                 SnackbarHost(hostState = snackbarHostState)
             },
@@ -171,7 +170,7 @@ fun UsersView(
                             usersState.selectedUser = selectedUser
                             nameState = selectedUser.userName ?: ""
                             usernameState = selectedUser.userName ?: ""
-                            passwordState = selectedUser.password ?: ""
+                            passwordState = ""//selectedUser.password ?: ""
                             emailState = selectedUser.email ?: ""
                             deviceIdState = selectedUser.deviceID ?: ""
                         }

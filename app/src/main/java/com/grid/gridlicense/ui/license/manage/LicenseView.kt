@@ -342,7 +342,7 @@ fun LicenseView(
                             0
                         )
                         licenseState.selectedLicense.expirydate = expiryDate
-                        viewModel.generate(
+                        viewModel.saveLicense(
                             context,
                             licenseState.selectedLicense
                         )

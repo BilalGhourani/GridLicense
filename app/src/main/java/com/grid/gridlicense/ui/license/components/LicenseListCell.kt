@@ -14,6 +14,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +51,21 @@ fun LicenseListCell(
             }*/,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
+        val bigModifier = if (isLandscape) {
+            Modifier
+                .weight(1.8f)
+                .fillMaxHeight()
+                .wrapContentHeight(
+                    align = Alignment.CenterVertically
+                )
+        } else {
+            Modifier
+                .fillMaxHeight()
+                .width(180.dp)
+                .wrapContentHeight(
+                    align = Alignment.CenterVertically
+                )
+        }
         val textModifier = if (isLandscape) {
             Modifier
                 .weight(1f)
@@ -81,23 +97,34 @@ fun LicenseListCell(
         )
         Text(
             text = if (isHeader) "Client" else licenseModel.getClientName(),
-            modifier = textModifier,
+            modifier = bigModifier,
             textAlign = TextAlign.Center,
             style = textStyle,
             color = SettingsModel.textColor
         )
-        Divider(
+        VerticalDivider(
             color = Color.Black,
             modifier = dividerModifier
         )
         Text(
             text = if (isHeader) "Company" else licenseModel.getCompany(),
-            modifier = textModifier,
+            modifier = bigModifier,
             textAlign = TextAlign.Center,
             style = textStyle,
             color = SettingsModel.textColor
         )
-        Divider(
+        VerticalDivider(
+            color = Color.Black,
+            modifier = dividerModifier
+        )
+        Text(
+            text = if (isHeader) "Dev ID" else licenseModel.getDeviceID(),
+            modifier = bigModifier,
+            textAlign = TextAlign.Center,
+            style = textStyle,
+            color = SettingsModel.textColor
+        )
+        VerticalDivider(
             color = Color.Black,
             modifier = dividerModifier
         )
@@ -108,18 +135,18 @@ fun LicenseListCell(
             style = textStyle,
             color = SettingsModel.textColor
         )
-        Divider(
+        VerticalDivider(
             color = Color.Black,
             modifier = dividerModifier
         )
         Text(
-            text = if (isHeader) "Date" else licenseModel.getExpiryDate(),
+            text = if (isHeader) "CR. Date" else licenseModel.getCreatedDate(),
             modifier = textModifier,
             textAlign = TextAlign.Center,
             style = textStyle,
             color = SettingsModel.textColor
         )
-        Divider(
+        VerticalDivider(
             modifier = dividerModifier,
             color = Color.Black
         )

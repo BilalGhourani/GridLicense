@@ -32,11 +32,20 @@ class LicenseRepositoryImpl() : LicenseRepository {
                 license.deviseid,
                 license.module,
                 license.expirydatemessage,
-                license.expirydate,
+                DateHelper.getDateInFormat(
+                    license.expirydate!!,
+                    "yyyy-MM-dd hh:mm:ss.SSS"
+                ),
                 license.createduser,
-                license.createddate,
+                DateHelper.getDateInFormat(
+                    license.createddate!!,
+                    "yyyy-MM-dd hh:mm:ss.SSS"
+                ),
                 license.userstamp,
-                license.timestamp
+                DateHelper.getDateInFormat(
+                    license.timestamp!!,
+                    "yyyy-MM-dd hh:mm:ss.SSS"
+                )
             )
         )
         return license

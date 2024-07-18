@@ -13,6 +13,7 @@ import com.grid.gridlicense.data.license.LicenseRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -27,6 +28,9 @@ class LicensesListViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(LicensesListState())
     val state: MutableStateFlow<LicensesListState> = _state
+
+    private var searchJob: Job? = null
+    private var licensesList: MutableList<LicenseModel> = mutableListOf()
 
     var licenseFile: File? = null
 
@@ -43,8 +47,35 @@ class LicensesListViewModel @Inject constructor(
         )
     }
 
+    fun search(key: String) {
+        searchJob?.run {
+            if (isActive) cancel()
+        }
+        if (key.isEmpty()) {
+            state.value = state.value.copy(
+                licenseModels = licensesList
+            )
+            return
+        }
+        searchJob = CoroutineScope(Dispatchers.IO).launch {
+            val searchResult = licensesList.filter {
+                it.client.clientName?.lowercase()?.contains(key) == true
+                        || it.license.company?.lowercase()?.contains(key) == true
+                        || it.license.deviseid?.lowercase()?.contains(key) == true
+                        || DateHelper.getDateInFormat(it.license.expirydate!!).contains(key)
+                        || DateHelper.getDateInFormat(it.license.createddate!!).contains(key)
+            }
+            withContext(Dispatchers.Main) {
+                state.value = state.value.copy(
+                    licenseModels = searchResult.toMutableList()
+                )
+            }
+        }
+    }
+
     private suspend fun fetchLicenses() {
         val listOfLicenseModels = licenseRepository.getAllLicenseModels()
+        licensesList = listOfLicenseModels
         viewModelScope.launch(Dispatchers.Main) {
             state.value = state.value.copy(
                 licenseModels = listOfLicenseModels

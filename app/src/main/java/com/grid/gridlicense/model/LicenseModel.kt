@@ -17,10 +17,24 @@ data class LicenseModel(
         return license.company ?: "N/A"
     }
 
+    fun getDeviceID(): String {
+        return license.deviseid ?: "N/A"
+    }
+
     fun getExpiryDate(): String {
         if (license.expirydate != null) {
-            DateHelper.getDateInFormat(
+           return DateHelper.getDateInFormat(
                 license.expirydate!!,
+                "yyyy-MM-dd"
+            )
+        }
+        return "N/A"
+    }
+
+    fun getCreatedDate(): String {
+        if (license.createddate != null) {
+           return DateHelper.getDateInFormat(
+                license.createddate!!,
                 "yyyy-MM-dd"
             )
         }

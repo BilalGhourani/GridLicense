@@ -18,7 +18,7 @@ class UserRepositoryImpl() : UserRepository {
             listOf(
                 user.userId,
                 user.userName,
-                "hashBytes ('SHA2_512', CONVERT(nvarchar(4000),'${user.password}'+cast(userid as nvarchar(36))))",
+                "HashBytes('SHA2_512', ${user.password})",
                 user.email,
                 user.deviceID
             )
@@ -38,29 +38,47 @@ class UserRepositoryImpl() : UserRepository {
     override suspend fun update(
             user: User
     ) {
-        SQLServerWrapper.update(
-            "users",
-            listOf(
-                "username",
-                "password",
-                "email",
-                "deviseid"
-            ),
-            listOf(
-                user.userName,
-                user.password,
-                user.email,
-                user.deviceID
-            ),
-            "userid = '${user.userId}'"
-        )
+        if(user.password.isNullOrEmpty()){
+            SQLServerWrapper.update(
+                "users",
+                listOf(
+                    "username",
+                    "email",
+                    "deviseid"
+                ),
+                listOf(
+                    user.userName,
+                    user.email,
+                    user.deviceID
+                ),
+                "userid = '${user.userId}'"
+            )
+        }else{
+            SQLServerWrapper.update(
+                "users",
+                listOf(
+                    "username",
+                    "password",
+                    "email",
+                    "deviseid"
+                ),
+                listOf(
+                    user.userName,
+                    "HashBytes('SHA2_512', ${user.password})",
+                    user.email,
+                    user.deviceID
+                ),
+                "userid = '${user.userId}'"
+            )
+        }
+
     }
 
     override suspend fun getUserByCredentials(
             loginUsername: String,
             loginPassword: String
     ): User? {
-        val where = "username = $loginUsername AND password=hashBytes ('SHA2_512', CONVERT(nvarchar(4000),'$loginPassword'+cast(userid as nvarchar(36))))"
+        val where = "username = '$loginUsername' AND password = HashBytes('SHA2_512', '$loginPassword')"
         val dbResult = SQLServerWrapper.getListOf(
             "users",
             "",

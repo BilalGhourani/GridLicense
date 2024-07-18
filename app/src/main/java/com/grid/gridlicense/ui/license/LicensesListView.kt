@@ -3,13 +3,16 @@ package com.grid.gridlicense.ui.license
 import android.content.Intent
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -31,6 +34,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -41,6 +45,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -56,6 +61,8 @@ import com.grid.gridlicense.ui.license.components.LicenseListCell
 import com.grid.gridlicense.ui.theme.GridLicenseTheme
 import com.grid.gridlicense.ui.common.LoadingIndicator
 import com.grid.gridlicense.ui.common.UIButton
+import com.grid.gridlicense.ui.common.UITextField
+import com.grid.gridlicense.utils.Utils
 import kotlinx.coroutines.launch
 
 @OptIn(
@@ -101,6 +108,8 @@ fun LicensesListView(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    var searchState by remember { mutableStateOf("") }
 
     var orientation by remember { mutableIntStateOf(Configuration.ORIENTATION_PORTRAIT) }
     val configuration = LocalConfiguration.current
@@ -188,16 +197,52 @@ fun LicensesListView(
                     navController?.navigate("LicenseView")
                 }
 
+                UITextField(modifier = Modifier.padding(
+                    top = 10.dp,
+                    start = 10.dp,
+                    end = 10.dp,
+                    bottom = 2.dp
+                ),
+                    defaultValue = searchState,
+                    label = "Search",
+                    cornerRadius = 0.dp,
+                    placeHolder = "Search",
+                    imeAction = ImeAction.Done,
+                    onAction = { keyboardController?.hide() }) {
+                    searchState = it
+                    viewModel.search(it.lowercase().trim())
+                }
+
+                // Border stroke configuration
+                val borderStroke = BorderStroke(
+                    1.dp,
+                    Color.Black
+                )
+                val cellHeight = 50
+
                 LazyColumn(
                     modifier = if (isLandscape) {
                         modifier
                             .fillMaxWidth()
-                            .weight(1f)
+                            .height(
+                                Utils.getListHeight(
+                                    state.licenseModels.size,
+                                    cellHeight
+                                )
+                            )
+                            .border(borderStroke)
                     } else {
                         modifier
                             .fillMaxWidth()
                             .horizontalScroll(rememberScrollState())
-                            .weight(1f)
+                            .heightIn(
+                                min = cellHeight.dp,
+                                max = configuration.screenHeightDp.dp
+                                    .minus(80.dp)
+                                    .minus(it.calculateTopPadding())
+                                    .minus(it.calculateBottomPadding())
+                            )
+                            .border(borderStroke)
                     },
                     contentPadding = PaddingValues(0.dp)
                 ) {
@@ -205,7 +250,7 @@ fun LicensesListView(
                         LicenseListCell(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(50.dp)
+                                .height(cellHeight.dp)
                                 .background(color = Color.LightGray),
                             licenseModel = LicenseModel(),
                             isHeader = true,
@@ -218,7 +263,7 @@ fun LicensesListView(
                             val color = if (index % 2 == 0) Color.White else Color.LightGray
                             LicenseListCell(modifier = Modifier
                                 .fillMaxWidth()
-                                .height(50.dp)
+                                .height(cellHeight.dp)
                                 .background(color = color),
                                 licenseModel = licenseModel,
                                 isLandscape = isLandscape,

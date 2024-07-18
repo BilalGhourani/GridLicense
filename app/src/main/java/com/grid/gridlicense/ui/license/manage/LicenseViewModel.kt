@@ -67,6 +67,7 @@ class LicenseViewModel @Inject constructor(
         CoroutineScope(Dispatchers.IO).launch {
             if (isInserting) {
                 license.prepareForInsert()
+                licenseRepository.insert(license)
                 viewModelScope.launch(Dispatchers.Main) {
                     generate(context,license)
                 }
