@@ -199,8 +199,8 @@ fun LicensesListView(
 
                 UITextField(modifier = Modifier.padding(
                     top = 10.dp,
-                    start = 10.dp,
-                    end = 10.dp,
+                    start = 0.dp,
+                    end = 0.dp,
                     bottom = 2.dp
                 ),
                     defaultValue = searchState,
