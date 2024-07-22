@@ -52,7 +52,7 @@ class ClientRepositoryImpl() : ClientRepository {
                 client.clientPhone,
                 client.clientCountry
             ),
-            "userid = '${client.clientid}'"
+            "clientid = '${client.clientid}'"
         )
     }
 

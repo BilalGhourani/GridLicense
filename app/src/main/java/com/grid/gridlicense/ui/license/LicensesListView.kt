@@ -3,19 +3,14 @@ package com.grid.gridlicense.ui.license
 import android.content.Intent
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,13 +29,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -57,12 +52,12 @@ import com.grid.gridlicense.BuildConfig
 import com.grid.gridlicense.R
 import com.grid.gridlicense.model.LicenseModel
 import com.grid.gridlicense.model.SettingsModel
-import com.grid.gridlicense.ui.license.components.LicenseListCell
-import com.grid.gridlicense.ui.theme.GridLicenseTheme
 import com.grid.gridlicense.ui.common.LoadingIndicator
+import com.grid.gridlicense.ui.common.SwipeToDeleteContainer
 import com.grid.gridlicense.ui.common.UIButton
 import com.grid.gridlicense.ui.common.UITextField
-import com.grid.gridlicense.utils.Utils
+import com.grid.gridlicense.ui.license.components.LicenseListCell
+import com.grid.gridlicense.ui.theme.GridLicenseTheme
 import kotlinx.coroutines.launch
 
 @OptIn(
@@ -82,46 +77,11 @@ fun LicensesListView(
 
     val context = LocalContext.current
 
-    fun shareLicense(action: String) {
-        viewModel.licenseFile?.let { file ->
-            val shareIntent = Intent()
-            shareIntent.setAction(action)
-            val attachment = FileProvider.getUriForFile(
-                context,
-                BuildConfig.APPLICATION_ID,
-                file
-            )
-            shareIntent.putExtra(
-                Intent.EXTRA_STREAM,
-                attachment
-            )
-            shareIntent.setType("application/octet-stream")
-
-            activityViewModel.startChooserActivity(
-                Intent.createChooser(
-                    shareIntent,
-                    "send license file"
-                )
-            )
-        }
-    }
-
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     var searchState by remember { mutableStateOf("") }
-
-    var orientation by remember { mutableIntStateOf(Configuration.ORIENTATION_PORTRAIT) }
-    val configuration = LocalConfiguration.current
-    val isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
     val keyboardController = LocalSoftwareKeyboardController.current
-
-    LaunchedEffect(configuration) {
-        snapshotFlow { configuration.orientation }.collect {
-            orientation = it
-        }
-    }
-
 
     LaunchedEffect(
         state.warning,
@@ -191,21 +151,19 @@ fun LicensesListView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(70.dp)
-                        .padding(10.dp),
+                        .padding(top = 10.dp),
                     text = "Create new license"
                 ) {
                     navController?.navigate("LicenseView")
                 }
 
                 UITextField(modifier = Modifier.padding(
-                    top = 10.dp,
-                    start = 0.dp,
-                    end = 0.dp,
-                    bottom = 2.dp
+                    vertical = 10.dp,
+                    horizontal = 5.dp,
                 ),
                     defaultValue = searchState,
                     label = "Search",
-                    cornerRadius = 0.dp,
+                    height = 60.dp,
                     placeHolder = "Search",
                     imeAction = ImeAction.Done,
                     onAction = { keyboardController?.hide() }) {
@@ -213,71 +171,33 @@ fun LicensesListView(
                     viewModel.search(it.lowercase().trim())
                 }
 
-                // Border stroke configuration
-                val borderStroke = BorderStroke(
-                    1.dp,
-                    Color.Black
-                )
-                val cellHeight = 50
-
                 LazyColumn(
-                    modifier = if (isLandscape) {
-                        modifier
-                            .fillMaxWidth()
-                            .height(
-                                Utils.getListHeight(
-                                    state.licenseModels.size,
-                                    cellHeight
-                                )
-                            )
-                            .border(borderStroke)
-                    } else {
-                        modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
-                            .heightIn(
-                                min = cellHeight.dp,
-                                max = configuration.screenHeightDp.dp
-                                    .minus(80.dp)
-                                    .minus(it.calculateTopPadding())
-                                    .minus(it.calculateBottomPadding())
-                            )
-                            .border(borderStroke)
-                    },
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .weight(1f),
                     contentPadding = PaddingValues(0.dp)
                 ) {
-                    stickyHeader {
-                        LicenseListCell(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(cellHeight.dp)
-                                .background(color = Color.LightGray),
-                            licenseModel = LicenseModel(),
-                            isHeader = true,
-                            isLandscape = isLandscape,
-                            index = 0
-                        )
-                    }
-                    state.licenseModels.forEachIndexed { index, licenseModel ->
+                    state.licenseModels.forEach { licenseModel ->
                         item {
-                            val color = if (index % 2 == 0) Color.White else Color.LightGray
-                            LicenseListCell(modifier = Modifier
-                                .fillMaxWidth()
-                                .height(cellHeight.dp)
-                                .background(color = color),
-                                licenseModel = licenseModel,
-                                isLandscape = isLandscape,
-                                index = index,
-                                onEdit = {
-                                    viewModel.generate(
-                                        context,
-                                        licenseModel.license.deviseid!!,
-                                        licenseModel.license.expirydate!!,
-                                        false,
-                                        "0"
-                                    )
-                                },
-                                onRemove = { viewModel.deleteLicense(licenseModel) })
+                            SwipeToDeleteContainer(item = licenseModel,
+                                onDelete = { licModel ->
+                                    viewModel.deleteLicense(licModel)
+                                }) { licModel ->
+                                LicenseListCell(modifier = Modifier
+                                    .fillMaxWidth()
+                                    .wrapContentHeight()
+                                    .padding(5.dp),
+                                    licenseModel = licModel,
+                                    onEdit = {
+                                        viewModel.generate(
+                                            context,
+                                            licModel.license.deviseid!!,
+                                            licModel.license.expirydate!!,
+                                            false,
+                                            "0"
+                                        )
+                                    })
+                            }
                         }
                     }
                 }

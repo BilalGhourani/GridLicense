@@ -59,11 +59,7 @@ class LicensesListViewModel @Inject constructor(
         }
         searchJob = CoroutineScope(Dispatchers.IO).launch {
             val searchResult = licensesList.filter {
-                it.client.clientName?.lowercase()?.contains(key) == true
-                        || it.license.company?.lowercase()?.contains(key) == true
-                        || it.license.deviseid?.lowercase()?.contains(key) == true
-                        || DateHelper.getDateInFormat(it.license.expirydate!!).contains(key)
-                        || DateHelper.getDateInFormat(it.license.createddate!!).contains(key)
+                it.isMatchingTheKey(key)
             }
             withContext(Dispatchers.Main) {
                 state.value = state.value.copy(

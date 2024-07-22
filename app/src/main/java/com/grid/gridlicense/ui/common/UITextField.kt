@@ -42,12 +42,13 @@ fun UITextField(
         maxLines: Int = 1,
         readOnly: Boolean = false,
         cornerRadius: Dp = 15.dp,
+        height: Dp = 80.dp,
         leadingIcon: @Composable (() -> Unit)? = null,
         trailingIcon: @Composable (() -> Unit)? = null,
         onValueChange: (String) -> Unit
 ) {
     Box(
-        modifier = modifier.height(80.dp)
+        modifier = modifier.height(height)
     ) {
 
         OutlinedTextField(value = defaultValue,

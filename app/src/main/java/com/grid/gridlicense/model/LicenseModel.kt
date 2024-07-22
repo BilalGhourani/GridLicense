@@ -40,4 +40,12 @@ data class LicenseModel(
         }
         return "N/A"
     }
+
+    fun isMatchingTheKey(key:String) : Boolean{
+       return client.clientName?.lowercase()?.contains(key) == true
+                || license.company?.lowercase()?.contains(key) == true
+                || license.deviseid?.lowercase()?.contains(key) == true
+                || getExpiryDate().contains(key)
+                || getCreatedDate().contains(key)
+    }
 }
