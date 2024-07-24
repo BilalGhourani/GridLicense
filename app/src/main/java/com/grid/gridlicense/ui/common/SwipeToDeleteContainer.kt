@@ -1,9 +1,5 @@
 package com.grid.gridlicense.ui.common
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,67 +14,38 @@ import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> SwipeToDeleteContainer(
         item: T,
         onDelete: (T) -> Unit,
-        animationDuration: Int = 500,
         content: @Composable (T) -> Unit
 ) {
-    var isRemoved by remember {
-        mutableStateOf(false)
-    }
-    val state = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart) {
-                isRemoved = true
-                true
-            } else {
-                false
-            }
-        }
-    )
-
-    LaunchedEffect(key1 = isRemoved) {
-        if(isRemoved) {
-            delay(animationDuration.toLong())
+    val state = rememberSwipeToDismissBoxState(confirmValueChange = { value ->
+        if (value == SwipeToDismissBoxValue.EndToStart) {
             onDelete(item)
+            true
+        } else {
+            false
         }
-    }
+    })
 
-    AnimatedVisibility(
-        visible = !isRemoved,
-        exit = shrinkVertically(
-            animationSpec = tween(durationMillis = animationDuration),
-            shrinkTowards = Alignment.Top
-        ) + fadeOut()
-    ) {
-        SwipeToDismissBox(
-            state = state,
-            backgroundContent = {
-                DeleteBackground(swipeDismissState = state)
-            },
-            content = { content(item) },
-            enableDismissFromStartToEnd = false,
-            enableDismissFromEndToStart = true
-        )
-    }
+    SwipeToDismissBox(
+        state = state,
+        backgroundContent = {
+            DeleteBackground(swipeDismissState = state)
+        },
+        content = { content(item) },
+        enableDismissFromStartToEnd = false,
+        enableDismissFromEndToStart = true
+    )
 }
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

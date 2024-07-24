@@ -19,6 +19,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -38,7 +39,7 @@ fun UIAlertDialog(
         dialogText: String,
         positiveBtnText: String = "OK",
         negativeBtnText: String? = "CANCEL",
-        icon: ImageVector,
+        icon: ImageVector? = null,
         height: Dp = 200.dp
 ) {
     Dialog(onDismissRequest = { onDismissRequest() }) {
@@ -48,7 +49,7 @@ fun UIAlertDialog(
                 .height(height),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = SettingsModel.backgroundColor,
+                containerColor = Color.White
             )
         ) {
             Column(
@@ -58,17 +59,19 @@ fun UIAlertDialog(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Icon(
-                    modifier = Modifier.size(24.dp),
-                    imageVector = icon,
-                    contentDescription = "Example Icon",
-                    tint = SettingsModel.buttonColor
-                )
+                icon?.let {
+                    Icon(
+                        modifier = Modifier.size(24.dp),
+                        imageVector = it,
+                        contentDescription = "Example Icon",
+                        tint = SettingsModel.buttonColor
+                    )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+
 
                 Text(
                     text = dialogTitle,

@@ -20,7 +20,7 @@ class ActivityScopedViewModel @Inject constructor() : ViewModel() {
     private val _activityState = MutableStateFlow(ActivityState())
     val activityState: MutableStateFlow<ActivityState> = _activityState
 
-    var addedLicenseModel: LicenseModel? = null
+    var selectedLicenseModel: LicenseModel? = null
 
     fun finish() {
         viewModelScope.launch {

@@ -78,7 +78,7 @@ class MainActivity : ComponentActivity() {
                             .padding(0.dp),
                         navController = navController,
                         activityViewModel = activityViewModel,
-                        startDestination = "LoginView"
+                        startDestination = "LicensesListView"
                     )
                 }
             }

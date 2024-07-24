@@ -16,9 +16,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.CalendarLocale
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -126,7 +128,7 @@ fun LicenseView(
     var companyState by remember { mutableStateOf("") }
     var deviceIdState by remember { mutableStateOf("") }
     var moduleState by remember { mutableStateOf("") }
-    val expiryDatePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDate.time)
+    var expiryDatePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDate.time)
     var expiryDateState by remember {
         mutableStateOf(
             DateHelper.getDateInFormat(
@@ -143,6 +145,28 @@ fun LicenseView(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(activityViewModel.selectedLicenseModel) {
+        activityViewModel.selectedLicenseModel?.let {
+            clientIdState = it.license.cltid ?: it.client.clientid
+            viewModel.state.value.clients = mutableListOf(it.client)
+            companyState = it.license.company ?: ""
+            deviceIdState = it.license.deviseid ?: ""
+            moduleState = it.license.module ?: ""
+            val time = it.license.expirydate?.time ?: initialDate.time
+            expiryDatePickerState = DatePickerState(
+                locale = CalendarLocale.getDefault(),
+                initialSelectedDateMillis = time
+            )
+            val expiryDate = getDateFromState(time)
+            expiryDateState = DateHelper.getDateInFormat(
+                expiryDate,
+                "yyyy-MM-dd"
+            )
+            expiryDateMessageState = it.license.expirydatemessage
+            activityViewModel.selectedLicenseModel = null
+        }
+    }
 
 
     LaunchedEffect(
@@ -201,7 +225,9 @@ fun LicenseView(
                 }
             }) {
             Column(
-                modifier = modifier.padding(it).verticalScroll(rememberScrollState())
+                modifier = modifier
+                    .padding(it)
+                    .verticalScroll(rememberScrollState())
             ) {
 
                 SearchableDropdownMenu(

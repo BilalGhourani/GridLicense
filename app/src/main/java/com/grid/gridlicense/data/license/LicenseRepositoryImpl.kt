@@ -150,22 +150,34 @@ class LicenseRepositoryImpl() : LicenseRepository {
             license.module = obj.optString("module")
             license.expirydatemessage = obj.optBoolean("expirydatemessage")
             val expiry = obj.opt("expirydate")
-            license.expirydate = if (expiry is Date) expiry else DateHelper.getDateFromString(
-                expiry as String,
-                "yyyy-MM-dd hh:mm:ss.SSS"
-            )
+            license.expirydate = when (expiry) {
+                null -> null
+                is Date -> expiry
+                else -> DateHelper.getDateFromString(
+                    expiry as String,
+                    "yyyy-MM-dd hh:mm:ss.SSS"
+                )
+            }
             license.createduser = obj.optString("createduser")
             val created = obj.opt("createddate")
-            license.createddate = if (created is Date) created else DateHelper.getDateFromString(
-                created as String,
-                "yyyy-MM-dd hh:mm:ss.SSS"
-            )
+            license.createddate = when (created) {
+                    null -> null
+                    is Date -> created
+                    else -> DateHelper.getDateFromString(
+                        created as String,
+                        "yyyy-MM-dd hh:mm:ss.SSS"
+                    )
+                }
             license.userstamp = obj.optString("userstamp")
             val timeSt = obj.opt("timestamp")
-            license.timestamp = if (timeSt is Date) timeSt else DateHelper.getDateFromString(
-                timeSt as String,
-                "yyyy-MM-dd hh:mm:ss.SSS"
-            )
+            license.timestamp =  when (timeSt) {
+                null -> null
+                is Date -> timeSt
+                else -> DateHelper.getDateFromString(
+                    timeSt as String,
+                    "yyyy-MM-dd hh:mm:ss.SSS"
+                )
+            }
             val client = Client()
             client.clientid = obj.optString("clientid")
             client.clientName = obj.optString("name")
