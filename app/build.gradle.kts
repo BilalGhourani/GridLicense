@@ -6,6 +6,14 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        create("release") {
+            storeFile = file("/Users/bilal/Documents/development/freelance/Grids Android/GridLicenseKeystore.keystore")
+            storePassword = "Grids123"
+            keyAlias = "GridLicense"
+            keyPassword = "Grids123"
+        }
+    }
     namespace = "com.grid.gridlicense"
     compileSdk = 34
 
@@ -24,7 +32,16 @@ android {
 
     buildTypes {
         release {
+            isMinifyEnabled = true
+            isDebuggable = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+        debug {
             isMinifyEnabled = false
+            isDebuggable = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
