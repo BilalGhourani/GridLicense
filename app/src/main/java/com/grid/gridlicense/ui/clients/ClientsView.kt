@@ -156,7 +156,8 @@ fun ClientsView(
                         SearchableDropdownMenu(
                             items = clientsState.clients.toMutableList(),
                             modifier = Modifier.padding(10.dp),
-                            label = nameState.ifEmpty { "Select Client" },
+                            label = "Select Client" ,
+                            selectedId = clientsState.selectedClient.clientid
                         ) { selectedClient ->
                             selectedClient as Client
                             clientsState.selectedClient = selectedClient
