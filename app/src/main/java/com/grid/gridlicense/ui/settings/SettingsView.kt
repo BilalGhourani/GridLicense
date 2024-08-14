@@ -83,10 +83,14 @@ fun SettingsView(
 ) {
 
     var sqlServerPath by remember { mutableStateOf(SettingsModel.sqlServerPath ?: "") }
+    var sqlServerName by remember { mutableStateOf(SettingsModel.sqlServerName ?: "") }
+    var sqlServerDbName by remember { mutableStateOf(SettingsModel.sqlServerDbName ?: "") }
     var sqlServerDbUser by remember { mutableStateOf(SettingsModel.sqlServerDbUser ?: "") }
     var sqlServerDbPassword by remember { mutableStateOf(SettingsModel.sqlServerDbPassword ?: "") }
     var passwordVisibility by remember { mutableStateOf(false) }
 
+    val sqlServerNameRequester = remember { FocusRequester() }
+    val sqlServerDbNameRequester = remember { FocusRequester() }
     val sqlServerUserRequester = remember { FocusRequester() }
     val sqlServerPasswordRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -205,8 +209,27 @@ fun SettingsView(
                                 label = "SQL Server Path",
                                 placeHolder = "host:port/dbname",
                                 imeAction = ImeAction.Next,
-                                onAction = { sqlServerUserRequester.requestFocus() }) { path ->
+                                onAction = { sqlServerNameRequester.requestFocus() }) { path ->
                                 sqlServerPath = path
+                            }
+
+                            UITextField(modifier = Modifier.padding(10.dp),
+                                defaultValue = sqlServerName,
+                                label = "Sql Server Name",
+                                placeHolder = "Sql Server Name",
+                                focusRequester = sqlServerNameRequester,
+                                imeAction = ImeAction.Next,
+                                onAction = { sqlServerDbNameRequester.requestFocus() }) { name ->
+                                sqlServerName = name
+                            }
+                            UITextField(modifier = Modifier.padding(10.dp),
+                                defaultValue = sqlServerDbName,
+                                label = "Database Name",
+                                placeHolder = "Database Name",
+                                focusRequester = sqlServerDbNameRequester,
+                                imeAction = ImeAction.Next,
+                                onAction = { sqlServerUserRequester.requestFocus() }) { dbName ->
+                                sqlServerDbName = dbName
                             }
 
                             UITextField(modifier = Modifier.padding(10.dp),
@@ -258,6 +281,16 @@ fun SettingsView(
                                     DataStoreManager.putString(
                                         DataStoreManager.DataStoreKeys.SQL_SERVER_PATH.key,
                                         sqlServerPath
+                                    )
+                                    SettingsModel.sqlServerName = sqlServerName
+                                    DataStoreManager.putString(
+                                        DataStoreManager.DataStoreKeys.SQL_SERVER_NAME.key,
+                                        sqlServerName
+                                    )
+                                    SettingsModel.sqlServerDbName = sqlServerDbName
+                                    DataStoreManager.putString(
+                                        DataStoreManager.DataStoreKeys.SQL_SERVER_DB_NAME.key,
+                                        sqlServerDbName
                                     )
                                     SettingsModel.sqlServerDbUser = sqlServerDbUser
                                     DataStoreManager.putString(

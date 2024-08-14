@@ -191,6 +191,14 @@ object DataStoreManager {
             DataStoreKeys.SQL_SERVER_PATH.key,
             ""
         )
+        SettingsModel.sqlServerName = getString(
+            DataStoreKeys.SQL_SERVER_NAME.key,
+            ""
+        )
+        SettingsModel.sqlServerDbName = getString(
+            DataStoreKeys.SQL_SERVER_DB_NAME.key,
+            ""
+        )
         SettingsModel.sqlServerDbUser = getString(
             DataStoreKeys.SQL_SERVER_DB_USER.key,
             ""
@@ -202,7 +210,7 @@ object DataStoreManager {
     }
 
     enum class DataStoreKeys(val key: String) {
-        SQL_SERVER_PATH("SQL_SERVER_PATH"), SQL_SERVER_DB_USER("SQL_SERVER_DB_USER"), SQL_SERVER_DB_PASSWORD("SQL_SERVER_DB_PASSWORD"),
+        SQL_SERVER_PATH("SQL_SERVER_PATH"),SQL_SERVER_NAME("SQL_SERVER_NAME"),SQL_SERVER_DB_NAME("SQL_SERVER_DB_NAME"), SQL_SERVER_DB_USER("SQL_SERVER_DB_USER"), SQL_SERVER_DB_PASSWORD("SQL_SERVER_DB_PASSWORD"),
 
 
         BUTTON_COLOR("BUTTON_COLOR"), BUTTON_TEXT_COLOR("BUTTON_TEXT_COLOR"), BACKGROUND_COLOR(

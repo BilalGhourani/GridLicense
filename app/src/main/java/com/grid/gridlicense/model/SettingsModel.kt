@@ -13,10 +13,12 @@ object SettingsModel {
     var currentUser: User? = null
 
     var sqlServerPath: String? = null
+    var sqlServerName: String? = null
+    var sqlServerDbName: String? = null
     var sqlServerDbUser: String? = null
     var sqlServerDbPassword: String? = null
 
     fun getSqlServerDbPath(): String {
-        return "jdbc:jtds:sqlserver://${sqlServerPath};encrypt=true"
+        return "jdbc:jtds:sqlserver://${sqlServerPath}/$sqlServerDbName;instance=$sqlServerName;encrypt=true"
     }
 }
