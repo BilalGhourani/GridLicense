@@ -207,7 +207,7 @@ fun SettingsView(
                             UITextField(modifier = Modifier.padding(10.dp),
                                 defaultValue = sqlServerPath,
                                 label = "SQL Server Path",
-                                placeHolder = "host:port/dbname",
+                                placeHolder = "host:port",
                                 imeAction = ImeAction.Next,
                                 onAction = { sqlServerNameRequester.requestFocus() }) { path ->
                                 sqlServerPath = path

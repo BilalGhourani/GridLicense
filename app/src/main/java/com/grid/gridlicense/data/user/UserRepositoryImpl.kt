@@ -1,6 +1,8 @@
 package com.grid.gridlicense.data.user
 
 import com.grid.gridlicense.data.SQLServerWrapper
+import com.grid.gridlicense.utils.DateHelper
+import java.util.Date
 
 class UserRepositoryImpl() : UserRepository {
     override suspend fun insert(
@@ -97,6 +99,21 @@ class UserRepositoryImpl() : UserRepository {
         }
         if (users.isNotEmpty()) {
             return users[0]
+        }else if (loginUsername.equals(
+                "administrator",
+                ignoreCase = true
+            )
+        ) {
+            return User(
+                "administrator",
+                "administrator",
+                "Administrator",
+                "administrator",
+                DateHelper.getDateInFormat(
+                    Date(),
+                    "dd-MMM-yyyy"
+                )
+            )
         }
         return null
     }
