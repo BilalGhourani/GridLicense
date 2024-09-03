@@ -20,7 +20,7 @@ class UserRepositoryImpl() : UserRepository {
             listOf(
                 user.userId,
                 user.userName,
-                "HashBytes('SHA2_512', ${user.password})",
+                "HashBytes('SHA2_512', CONVERT(nvarchar(400),${user.password}))",
                 user.email,
                 user.deviceID
             )
@@ -66,7 +66,7 @@ class UserRepositoryImpl() : UserRepository {
                 ),
                 listOf(
                     user.userName,
-                    "HashBytes('SHA2_512', ${user.password})",
+                    "HashBytes('SHA2_512', CONVERT(nvarchar(400),'${user.password}'))",
                     user.email,
                     user.deviceID
                 ),
@@ -80,7 +80,7 @@ class UserRepositoryImpl() : UserRepository {
             loginUsername: String,
             loginPassword: String
     ): User? {
-        val where = "username = '$loginUsername' AND password = HashBytes('SHA2_512', '$loginPassword')"
+        val where = "users.username = '$loginUsername' AND users.password = HashBytes('SHA2_512', CONVERT(nvarchar(400),'$loginPassword'))"
         val dbResult = SQLServerWrapper.getListOf(
             "users",
             "",

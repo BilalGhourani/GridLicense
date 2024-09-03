@@ -23,11 +23,11 @@ object SQLServerWrapper {
     }
 
     fun getListOf(
-            tableName: String,
-            colPrefix: String = "",
-            columns: MutableList<String>,
-            where: String,
-            joinSubQuery: String = "",
+        tableName: String,
+        colPrefix: String = "",
+        columns: MutableList<String>,
+        where: String,
+        joinSubQuery: String = "",
     ): List<JSONObject> {
         var connection: Connection? = null
         var statement: PreparedStatement? = null
@@ -36,7 +36,7 @@ object SQLServerWrapper {
         try {
             connection = getDatabaseConnection()
             val cols = columns.joinToString(", ")
-            val whereQuery = if (where.isNotEmpty()) "WHERE $where " else ""
+            val whereQuery = if (where.isNotEmpty()) "WHERE $where" else ""
             val query = "SELECT $colPrefix $cols FROM $tableName $joinSubQuery $whereQuery"
             statement = connection.prepareStatement(query)
             resultSet = statement.executeQuery()
@@ -74,8 +74,8 @@ object SQLServerWrapper {
     }
 
     fun executeProcedure(
-            procedureName: String,
-            params: List<Any>,
+        procedureName: String,
+        params: List<Any>,
     ): List<JSONObject> {
         var connection: Connection? = null
         var statement: PreparedStatement? = null
@@ -86,7 +86,8 @@ object SQLServerWrapper {
 
             val parameters = params.joinToString(", ")
             // Prepare the stored procedure call
-            val query = "select dbo.$procedureName($parameters) as $procedureName" // Modify with your procedure and parameters
+            val query =
+                "select dbo.$procedureName($parameters) as $procedureName" // Modify with your procedure and parameters
             statement = connection.prepareStatement(query)
             resultSet = statement.executeQuery()
 
@@ -112,44 +113,63 @@ object SQLServerWrapper {
     }
 
     fun insert(
-            tableName: String,
-            columns: List<String>,
-            values: List<Any?>
+        tableName: String,
+        columns: List<String>,
+        values: List<Any?>
     ) {
         if (columns.size != values.size) {
             return
         }
         val cols = columns.joinToString(", ")
-        val vals = columns.joinToString(", ") { "?" }
+        val vals = values.joinToString(", ") {
+            if (it is String) {
+                if (it.startsWith("HashBytes")) {
+                    it
+                } else {
+                    "'$it'"
+                }
+            } else {
+                "'$it'"
+            }
+        }
         val sqlQuery = "INSERT INTO $tableName ($cols) VALUES ($vals)"
         runDbQuery(
             sqlQuery,
-            values
+            mutableListOf()
         )
     }
 
     fun update(
-            tableName: String,
-            columns: List<String>,
-            values: List<Any?>,
-            where: String
+        tableName: String,
+        columns: List<String>,
+        values: List<Any?>,
+        where: String
     ) {
         if (columns.size != values.size) {
             return
         }
-        val setStatement = columns.joinToString(", ") { "$it = ?" }
+        //val setStatement = columns.joinToString(", ") { "$it = ?" }
+        // Combine the lists into the desired format
+        val setStatement = columns.zip(values) { param, value ->
+            if (value is String && value.startsWith("HashBytes")) {
+                "$param=$value"
+            } else {
+                "$param='$value'"
+            }
+        }
+            .joinToString(", ")
         val whereQuery = if (where.isNotEmpty()) "WHERE $where " else ""
         val sqlQuery = "UPDATE $tableName SET $setStatement $whereQuery"
         runDbQuery(
             sqlQuery,
-            values
+            mutableListOf()
         )
     }
 
     fun delete(
-            tableName: String,
-            where: String,
-            innerJoin: String = ""
+        tableName: String,
+        where: String,
+        innerJoin: String = ""
     ) {
         val whereQuery = if (where.isNotEmpty()) "WHERE $where " else ""
         val sqlQuery = "DELETE FROM $tableName $innerJoin $whereQuery"
@@ -160,8 +180,8 @@ object SQLServerWrapper {
     }
 
     private fun runDbQuery(
-            query: String,
-            params: List<Any?>
+        query: String,
+        params: List<Any?>
     ): Boolean {
         var connection: Connection? = null
         var statement: PreparedStatement? = null
