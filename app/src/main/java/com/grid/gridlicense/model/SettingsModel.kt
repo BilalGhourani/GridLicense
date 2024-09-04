@@ -18,6 +18,8 @@ object SettingsModel {
     var sqlServerDbUser: String? = null
     var sqlServerDbPassword: String? = null
 
+    var batchLimit: Int = 30
+
     fun getSqlServerDbPath(): String {
         return "jdbc:jtds:sqlserver://${sqlServerPath}/$sqlServerDbName;instance=$sqlServerName;encrypt=true"
     }

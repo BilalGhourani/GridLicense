@@ -9,6 +9,7 @@ import java.sql.ResultSet
 
 object SQLServerWrapper {
 
+    private var mConnection: Connection? = null
     private fun getDatabaseConnection(): Connection {
         try {
             Class.forName("net.sourceforge.jtds.jdbc.Driver")
@@ -20,6 +21,22 @@ object SQLServerWrapper {
             SettingsModel.sqlServerDbUser,
             SettingsModel.sqlServerDbPassword
         )
+    }
+
+    fun openConnection() {
+        try {
+            mConnection = getDatabaseConnection()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun closeConnection() {
+        try {
+            mConnection?.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun getListOf(
@@ -34,7 +51,7 @@ object SQLServerWrapper {
         var resultSet: ResultSet? = null
         val result = mutableListOf<JSONObject>()
         try {
-            connection = getDatabaseConnection()
+            connection =  getConnection()
             val cols = columns.joinToString(", ")
             val whereQuery = if (where.isNotEmpty()) "WHERE $where" else ""
             val query = "SELECT $colPrefix $cols FROM $tableName $joinSubQuery $whereQuery"
@@ -68,7 +85,9 @@ object SQLServerWrapper {
         } finally {
             resultSet?.close()
             statement?.close()
-            connection?.close()
+            if (mConnection == null) {
+                connection?.close()
+            }
         }
         return result
     }
@@ -82,7 +101,7 @@ object SQLServerWrapper {
         var resultSet: ResultSet? = null
         val result = mutableListOf<JSONObject>()
         try {
-            connection = getDatabaseConnection()
+            connection =  getConnection()
 
             val parameters = params.joinToString(", ")
             // Prepare the stored procedure call
@@ -107,7 +126,9 @@ object SQLServerWrapper {
         } finally {
             resultSet?.close()
             statement?.close()
-            connection?.close()
+            if (mConnection == null) {
+                connection?.close()
+            }
         }
         return result
     }
@@ -186,7 +207,7 @@ object SQLServerWrapper {
         var connection: Connection? = null
         var statement: PreparedStatement? = null
         return try {
-            connection = getDatabaseConnection()
+            connection = getConnection()
             statement = connection.prepareStatement(query)
 
             params.forEachIndexed { index, param ->
@@ -202,7 +223,16 @@ object SQLServerWrapper {
             false
         } finally {
             statement?.close()
-            connection?.close()
+            if (mConnection == null) {
+                connection?.close()
+            }
         }
+    }
+
+    private fun getConnection(): Connection {
+        if (mConnection != null && !mConnection!!.isClosed) {
+            return mConnection!!
+        }
+        return getDatabaseConnection()
     }
 }

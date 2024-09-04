@@ -165,7 +165,8 @@ fun UsersView(
                             items = usersState.users.toMutableList(),
                             modifier = Modifier.padding(10.dp),
                             label =  "Select User" ,
-                            selectedId = usersState.selectedUser.userId
+                            selectedId = usersState.selectedUser.userId,
+                            onSearch = {viewModel.searchInUsers(it)}
                         ) { selectedUser ->
                             selectedUser as User
                             usersState.selectedUser = selectedUser

@@ -1,6 +1,7 @@
 package com.grid.gridlicense.data.user
 
 import com.grid.gridlicense.data.SQLServerWrapper
+import com.grid.gridlicense.model.SettingsModel
 import com.grid.gridlicense.utils.DateHelper
 import java.util.Date
 
@@ -40,7 +41,7 @@ class UserRepositoryImpl() : UserRepository {
     override suspend fun update(
             user: User
     ) {
-        if(user.password.isNullOrEmpty()){
+        if (user.password.isNullOrEmpty()) {
             SQLServerWrapper.update(
                 "users",
                 listOf(
@@ -55,7 +56,7 @@ class UserRepositoryImpl() : UserRepository {
                 ),
                 "userid = '${user.userId}'"
             )
-        }else{
+        } else {
             SQLServerWrapper.update(
                 "users",
                 listOf(
@@ -99,7 +100,7 @@ class UserRepositoryImpl() : UserRepository {
         }
         if (users.isNotEmpty()) {
             return users[0]
-        }else if (loginUsername.equals(
+        } else if (loginUsername.equals(
                 "administrator",
                 ignoreCase = true
             )
@@ -118,12 +119,36 @@ class UserRepositoryImpl() : UserRepository {
         return null
     }
 
-    override suspend fun getAllUsers(): MutableList<User> {
+    override suspend fun getAllUsers(limit: Int): MutableList<User> {
         val dbResult = SQLServerWrapper.getListOf(
             "users",
-            "",
+            "TOP $limit",
             mutableListOf("*"),
             ""
+        )
+        val users: MutableList<User> = mutableListOf()
+        dbResult.forEach { obj ->
+            users.add(User().apply {
+                userId = obj.optString("userid")
+                userName = obj.optString("username")
+                password = obj.optString("password")
+                email = obj.optString("email")
+                deviceID = obj.optString("deviseid")
+            })
+        }
+        return users
+
+    }
+
+    override suspend fun getAllUsersWithKey(
+            key: String,
+            limit: Int
+    ): MutableList<User> {
+        val dbResult = SQLServerWrapper.getListOf(
+            "users",
+            "TOP $limit",
+            mutableListOf("*"),
+            if (key.isEmpty()) "" else "username LIKE '%$key%' OR email LIKE '%$key%' OR deviseid LIKE '%$key%'"
         )
         val users: MutableList<User> = mutableListOf()
         dbResult.forEach { obj ->

@@ -2,6 +2,7 @@ package com.grid.gridlicense.ui.users
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.grid.gridlicense.data.SQLServerWrapper
 import com.grid.gridlicense.model.Event
 import com.grid.gridlicense.data.user.User
 import com.grid.gridlicense.data.user.UserRepository
@@ -10,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -21,17 +23,33 @@ class UsersViewModel @Inject constructor(
     val usersState: MutableStateFlow<UsersState> = _UsersState
 
     init {
+        //fetchUsers()
+    }
+
+    private fun fetchUsers() {
         viewModelScope.launch(Dispatchers.IO) {
-            fetchUsers()
+            val listOfUsers = userRepository.getAllUsers()
+            withContext(Dispatchers.Main) {
+                usersState.value = usersState.value.copy(
+                    users = listOfUsers
+                )
+            }
         }
     }
 
-    private suspend fun fetchUsers() {
-        val listOfUsers =  userRepository.getAllUsers()
-        viewModelScope.launch(Dispatchers.Main) {
-            usersState.value = usersState.value.copy(
-                users = listOfUsers
-            )
+    fun searchInUsers(key: String) {
+        usersState.value = usersState.value.copy(
+            warning = null,
+            isLoading = true
+        )
+        viewModelScope.launch(Dispatchers.IO) {
+            val listOfUsers = userRepository.getAllUsersWithKey(key)
+            withContext(Dispatchers.Main) {
+                usersState.value = usersState.value.copy(
+                    users = listOfUsers,
+                    isLoading = false
+                )
+            }
         }
     }
 
@@ -49,18 +67,26 @@ class UsersViewModel @Inject constructor(
         val isInserting = user.isNew()
         CoroutineScope(Dispatchers.IO).launch {
             if (isInserting) {
-                user.prepareForInsert()
-                val addedModel = userRepository.insert(user)
-                val users = usersState.value.users
-                users.add(addedModel)
-                viewModelScope.launch(Dispatchers.Main) {
-                    usersState.value = usersState.value.copy(
-                        users = users,
-                        selectedUser = addedModel,
-                        isLoading = false,
-                        clear = true
-                    )
+                //user.prepareForInsert()
+                SQLServerWrapper.openConnection()
+                for (i in 28..1000) {
+                    val usr = user.copy(userName = "user${i + 1}")
+                    usr.prepareForInsert()
+                    val addedModel = userRepository.insert(usr)
+                    val users = usersState.value.users
+                    users.add(addedModel)
+                    if(i==1000) {
+                        withContext(Dispatchers.Main) {
+                            usersState.value = usersState.value.copy(
+                                users = users,
+                                selectedUser = addedModel,
+                                isLoading = false,
+                                clear = true
+                            )
+                        }
+                    }
                 }
+                SQLServerWrapper.closeConnection()
             } else {
                 userRepository.update(user)
                 viewModelScope.launch(Dispatchers.Main) {

@@ -1,5 +1,7 @@
 package com.grid.gridlicense.data.user
 
+import com.grid.gridlicense.model.SettingsModel
+
 interface UserRepository {
 
     // suspend is a coroutine keyword,
@@ -19,5 +21,11 @@ interface UserRepository {
     ): User?
 
     // Get all Users as stream.
-    suspend fun getAllUsers(): MutableList<User>
+    suspend fun getAllUsers(limit: Int = SettingsModel.batchLimit): MutableList<User>
+
+    // Get all Users as stream.
+    suspend fun getAllUsersWithKey(
+            key: String,
+            limit: Int = SettingsModel.batchLimit
+    ): MutableList<User>
 }
