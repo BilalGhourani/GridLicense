@@ -6,9 +6,13 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -235,22 +239,155 @@ fun LicenseView(
                         })
                 }
             }) {
-            Column(
+            Box(
                 modifier = modifier
+                    .fillMaxSize()
                     .padding(it)
-                    .verticalScroll(rememberScrollState())
+                    .background(color = Color.Transparent)
             ) {
-                SearchableDropdownMenuEx(items = licenseState.licenses.toMutableList(),
-                    modifier = Modifier.padding(10.dp),
-                    label = "Select License",
-                    selectedId = licenseState.selectedLicense.licenseid,
-                    onLoadItems = { viewModel.fetchLicenses() }) { licenseModel ->
-                    displayLicenseModel(licenseModel as LicenseModel)
+                Column(
+                    modifier = modifier
+                        .offset(y = 180.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        defaultValue = companyState,
+                        label = "Company",
+                        keyboardType = KeyboardType.Text,
+                        placeHolder = "Company",
+                        onAction = {
+                            deviceIdFocusRequester.requestFocus()
+                        }) { comp ->
+                        companyState = comp.trim()
+                        licenseState.selectedLicense.company = companyState
+                    }
+
+                    UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        defaultValue = deviceIdState,
+                        label = "Device ID",
+                        maxLines = 2,
+                        keyboardType = KeyboardType.Text,
+                        placeHolder = "device id",
+                        focusRequester = deviceIdFocusRequester,
+                        onAction = {
+                            moduleFocusRequester.requestFocus()
+                        }) { devId ->
+                        deviceIdState = devId.trim()
+                        licenseState.selectedLicense.deviseid = deviceIdState
+                    }
+
+                    UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        defaultValue = moduleState,
+                        label = "Module",
+                        keyboardType = KeyboardType.Text,
+                        placeHolder = "Module",
+                        focusRequester = moduleFocusRequester,
+                        onAction = {
+                            keyboardController?.hide()
+                        }) { module ->
+                        moduleState = module.trim()
+                        licenseState.selectedLicense.module = moduleState
+                    }
+
+                    UISwitch(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        checked = expiryDateMessageState,
+                        text = "Expiry date message",
+                    ) { exdm ->
+                        expiryDateMessageState = exdm
+                        licenseState.selectedLicense.expirydatemessage = exdm
+                    }
+
+                    UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        defaultValue = expiryDateState,
+                        label = "Expiry Date",
+                        maxLines = 1,
+                        readOnly = true,
+                        keyboardType = KeyboardType.Text,
+                        placeHolder = DateHelper.getDateInFormat(
+                            initialDate,
+                            "yyyy-MM-dd"
+                        ),
+                        trailingIcon = {
+                            IconButton(onClick = {
+                                showDatePicker = true
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.DateRange,
+                                    contentDescription = "Expiry Date",
+                                    tint = SettingsModel.buttonColor
+                                )
+                            }
+                        }) { date ->
+                        expiryDateState = date
+                        val expDate = DateHelper.getDateFromString(
+                            date,
+                            "yyyy-MM-dd"
+                        )
+                        val expiryDate = DateHelper.editDate(
+                            expDate,
+                            0,
+                            0,
+                            0
+                        )
+                        licenseState.selectedLicense.expirydate = expiryDate
+                    }
+
+                    UISwitch(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        checked = isRtaState,
+                        text = "is RTA",
+                    ) { isRta ->
+                        isRtaState = isRta
+                        licenseState.selectedLicense.isRta = isRta
+                    }
+
+                    if (isRtaState) {
+                        UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            defaultValue = rtaDaysState,
+                            label = "Number Of Days",
+                            keyboardType = KeyboardType.Number,
+                            placeHolder = "Number Of Days",
+                            onAction = {
+                                keyboardController?.hide()
+                            }) { days ->
+                            rtaDaysState = Utils.getIntValue(
+                                days,
+                                rtaDaysState
+                            )
+                            licenseState.selectedLicense.rtaDays = rtaDaysState
+                        }
+                    }
+
+                    UIButton(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(70.dp)
+                            .padding(horizontal = 10.dp, vertical = 5.dp),
+                        text = if (licenseState.isDone) "Share" else "Save"
+                    ) {
+                        if (licenseState.isDone) {
+                            shareExcelSheet(Intent.ACTION_SEND)
+                        } else {
+                            val date = getDateFromState(expiryDatePickerState.selectedDateMillis!!)
+                            val expiryDate = DateHelper.editDate(
+                                date,
+                                0,
+                                0,
+                                0
+                            )
+                            licenseState.selectedLicense.expirydate = expiryDate
+                            viewModel.saveLicense(
+                                context,
+                                licenseState.selectedLicense
+                            )
+                        }
+                    }
                 }
 
                 SearchableDropdownMenuEx(
                     items = licenseState.clients.toMutableList(),
-                    modifier = Modifier.padding(10.dp),
+                    modifier = Modifier.offset(y = 100.dp).padding(horizontal = 10.dp),
                     label = "Select Client",
                     selectedId = clientIdState
                 ) { selectedClient ->
@@ -259,138 +396,12 @@ fun LicenseView(
                     licenseState.selectedLicense.cltid = selectedClient.clientid
                 }
 
-                UITextField(modifier = Modifier.padding(10.dp),
-                    defaultValue = companyState,
-                    label = "Company",
-                    keyboardType = KeyboardType.Text,
-                    placeHolder = "Company",
-                    onAction = {
-                        deviceIdFocusRequester.requestFocus()
-                    }) { comp ->
-                    companyState = comp.trim()
-                    licenseState.selectedLicense.company = companyState
-                }
-
-                UITextField(modifier = Modifier.padding(10.dp),
-                    defaultValue = deviceIdState,
-                    label = "Device ID",
-                    maxLines = 2,
-                    keyboardType = KeyboardType.Text,
-                    placeHolder = "device id",
-                    focusRequester = deviceIdFocusRequester,
-                    onAction = {
-                        moduleFocusRequester.requestFocus()
-                    }) { devId ->
-                    deviceIdState = devId.trim()
-                    licenseState.selectedLicense.deviseid = deviceIdState
-                }
-
-                UITextField(modifier = Modifier.padding(10.dp),
-                    defaultValue = moduleState,
-                    label = "Module",
-                    keyboardType = KeyboardType.Text,
-                    placeHolder = "Module",
-                    focusRequester = moduleFocusRequester,
-                    onAction = {
-                        keyboardController?.hide()
-                    }) { module ->
-                    moduleState = module.trim()
-                    licenseState.selectedLicense.module = moduleState
-                }
-
-                UISwitch(
-                    modifier = Modifier.padding(10.dp),
-                    checked = expiryDateMessageState,
-                    text = "Expiry date message",
-                ) { exdm ->
-                    expiryDateMessageState = exdm
-                    licenseState.selectedLicense.expirydatemessage = exdm
-                }
-
-                UITextField(modifier = Modifier.padding(10.dp),
-                    defaultValue = expiryDateState,
-                    label = "Expiry Date",
-                    maxLines = 1,
-                    readOnly = true,
-                    keyboardType = KeyboardType.Text,
-                    placeHolder = DateHelper.getDateInFormat(
-                        initialDate,
-                        "yyyy-MM-dd"
-                    ),
-                    trailingIcon = {
-                        IconButton(onClick = {
-                            showDatePicker = true
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.DateRange,
-                                contentDescription = "Expiry Date",
-                                tint = SettingsModel.buttonColor
-                            )
-                        }
-                    }) { date ->
-                    expiryDateState = date
-                    val expDate = DateHelper.getDateFromString(
-                        date,
-                        "yyyy-MM-dd"
-                    )
-                    val expiryDate = DateHelper.editDate(
-                        expDate,
-                        0,
-                        0,
-                        0
-                    )
-                    licenseState.selectedLicense.expirydate = expiryDate
-                }
-
-                UISwitch(
-                    modifier = Modifier.padding(10.dp),
-                    checked = isRtaState,
-                    text = "is RTA",
-                ) { isRta ->
-                    isRtaState = isRta
-                    licenseState.selectedLicense.isRta = isRta
-                }
-
-                if (isRtaState) {
-                    UITextField(modifier = Modifier.padding(10.dp),
-                        defaultValue = rtaDaysState,
-                        label = "Number Of Days",
-                        keyboardType = KeyboardType.Number,
-                        placeHolder = "Number Of Days",
-                        onAction = {
-                            keyboardController?.hide()
-                        }) { days ->
-                        rtaDaysState = Utils.getIntValue(
-                            days,
-                            rtaDaysState
-                        )
-                        licenseState.selectedLicense.rtaDays = rtaDaysState
-                    }
-                }
-
-                UIButton(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(70.dp)
-                        .padding(10.dp),
-                    text = if (licenseState.isDone) "Share" else "Save"
-                ) {
-                    if (licenseState.isDone) {
-                        shareExcelSheet(Intent.ACTION_SEND)
-                    } else {
-                        val date = getDateFromState(expiryDatePickerState.selectedDateMillis!!)
-                        val expiryDate = DateHelper.editDate(
-                            date,
-                            0,
-                            0,
-                            0
-                        )
-                        licenseState.selectedLicense.expirydate = expiryDate
-                        viewModel.saveLicense(
-                            context,
-                            licenseState.selectedLicense
-                        )
-                    }
+                SearchableDropdownMenuEx(items = licenseState.licenses.toMutableList(),
+                    modifier = Modifier.offset(y = 15.dp).padding(horizontal = 10.dp),
+                    label = "Select License",
+                    selectedId = licenseState.selectedLicense.licenseid,
+                    onLoadItems = { viewModel.fetchLicenses() }) { licenseModel ->
+                    displayLicenseModel(licenseModel as LicenseModel)
                 }
             }
         }

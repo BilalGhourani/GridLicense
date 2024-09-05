@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
@@ -64,14 +65,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalComposeUiApi::class
+    ExperimentalMaterial3Api::class
 )
 @Composable
 fun UsersView(
-        navController: NavController? = null,
-        modifier: Modifier = Modifier,
-        viewModel: UsersViewModel = hiltViewModel()
+    navController: NavController? = null,
+    modifier: Modifier = Modifier,
+    viewModel: UsersViewModel = hiltViewModel()
 ) {
     val usersState: UsersState by viewModel.usersState.collectAsState(
         UsersState()
@@ -158,118 +158,115 @@ fun UsersView(
                     .background(color = Color.Transparent)
             ) {
                 Column(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .offset(y = 90.dp)
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            .weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        SearchableDropdownMenuEx(
-                            items = usersState.users.toMutableList(),
-                            modifier = Modifier.padding(10.dp),
-                            label =  "Select User" ,
-                            selectedId = usersState.selectedUser.userId,
-                            onLoadItems = {viewModel.fetchUsers()}
-                        ) { selectedUser ->
-                            selectedUser as User
-                            usersState.selectedUser = selectedUser
-                            nameState = selectedUser.userName ?: ""
-                            usernameState = selectedUser.userName ?: ""
-                            passwordState = ""//selectedUser.password ?: ""
-                            emailState = selectedUser.email ?: ""
-                            deviceIdState = selectedUser.deviceID ?: ""
-                        }
 
-                        UITextField(modifier = Modifier.padding(10.dp),
-                            defaultValue = usernameState,
-                            label = "Username",
-                            placeHolder = "Enter Username",
-                            onAction = { passwordFocusRequester.requestFocus() }) {
-                            usernameState = it
-                            usersState.selectedUser.userName = it.trim()
-                        }
-
-                        UITextField(modifier = Modifier.padding(10.dp),
-                            defaultValue = passwordState,
-                            label = "Password",
-                            placeHolder = "Enter Password",
-                            focusRequester = passwordFocusRequester,
-                            keyboardType = KeyboardType.Password,
-                            visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
-                            onAction = { emailFocusRequester.requestFocus() },
-                            trailingIcon = {
-                                IconButton(onClick = { passwordVisibility = !passwordVisibility }) {
-                                    Icon(
-                                        imageVector = if (passwordVisibility) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                        contentDescription = if (passwordVisibility) "Hide password" else "Show password",
-                                        tint = SettingsModel.buttonColor
-                                    )
-                                }
-                            }) {
-                            passwordState = it
-                            usersState.selectedUser.password = it.trim()
-                        }
-
-                        UITextField(modifier = Modifier.padding(10.dp),
-                            defaultValue = emailState,
-                            label = "Email",
-                            placeHolder = "Enter Email",
-                            focusRequester = emailFocusRequester,
-                            onAction = { deviceIdFocusRequester.requestFocus() }) {
-                            emailState = it
-                            usersState.selectedUser.email = it.trim()
-                        }
-
-                        UITextField(modifier = Modifier.padding(10.dp),
-                            defaultValue = deviceIdState,
-                            label = "Device ID",
-                            placeHolder = "Enter Device ID",
-                            focusRequester = deviceIdFocusRequester,
-                            imeAction = ImeAction.Done,
-                            onAction = { keyboardController?.hide() }) {
-                            deviceIdState = it
-                            usersState.selectedUser.deviceID = it.trim()
-                        }
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentHeight()
-                                .padding(10.dp),
-                            verticalAlignment = Alignment.Bottom
-                        ) {
-                            UIButton(
-                                modifier = Modifier
-                                    .weight(.33f)
-                                    .padding(3.dp),
-                                text = "Save"
-                            ) {
-                                viewModel.saveUser(usersState.selectedUser)
-                            }
-
-                            UIButton(
-                                modifier = Modifier
-                                    .weight(.33f)
-                                    .padding(3.dp),
-                                text = "Delete"
-                            ) {
-                                viewModel.deleteSelectedUser(usersState.selectedUser)
-                            }
-
-                            UIButton(
-                                modifier = Modifier
-                                    .weight(.33f)
-                                    .padding(3.dp),
-                                text = "Close"
-                            ) {
-                                handleBack()
-                            }
-                        }
-
+                    UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        defaultValue = usernameState,
+                        label = "Username",
+                        placeHolder = "Enter Username",
+                        onAction = { passwordFocusRequester.requestFocus() }) {
+                        usernameState = it
+                        usersState.selectedUser.userName = it.trim()
                     }
+
+                    UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        defaultValue = passwordState,
+                        label = "Password",
+                        placeHolder = "Enter Password",
+                        focusRequester = passwordFocusRequester,
+                        keyboardType = KeyboardType.Password,
+                        visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
+                        onAction = { emailFocusRequester.requestFocus() },
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisibility = !passwordVisibility }) {
+                                Icon(
+                                    imageVector = if (passwordVisibility) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                                    contentDescription = if (passwordVisibility) "Hide password" else "Show password",
+                                    tint = SettingsModel.buttonColor
+                                )
+                            }
+                        }) {
+                        passwordState = it
+                        usersState.selectedUser.password = it.trim()
+                    }
+
+                    UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        defaultValue = emailState,
+                        label = "Email",
+                        placeHolder = "Enter Email",
+                        focusRequester = emailFocusRequester,
+                        onAction = { deviceIdFocusRequester.requestFocus() }) {
+                        emailState = it
+                        usersState.selectedUser.email = it.trim()
+                    }
+
+                    UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        defaultValue = deviceIdState,
+                        label = "Device ID",
+                        placeHolder = "Enter Device ID",
+                        focusRequester = deviceIdFocusRequester,
+                        imeAction = ImeAction.Done,
+                        onAction = { keyboardController?.hide() }) {
+                        deviceIdState = it
+                        usersState.selectedUser.deviceID = it.trim()
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .padding(horizontal = 10.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        UIButton(
+                            modifier = Modifier
+                                .weight(.33f)
+                                .padding(3.dp),
+                            text = "Save"
+                        ) {
+                            viewModel.saveUser(usersState.selectedUser)
+                        }
+
+                        UIButton(
+                            modifier = Modifier
+                                .weight(.33f)
+                                .padding(3.dp),
+                            text = "Delete"
+                        ) {
+                            viewModel.deleteSelectedUser(usersState.selectedUser)
+                        }
+
+                        UIButton(
+                            modifier = Modifier
+                                .weight(.33f)
+                                .padding(3.dp),
+                            text = "Close"
+                        ) {
+                            handleBack()
+                        }
+                    }
+
+                }
+
+                SearchableDropdownMenuEx(
+                    items = usersState.users.toMutableList(),
+                    modifier = Modifier.padding(horizontal = 10.dp).offset(y = 15.dp),
+                    label = "Select User",
+                    selectedId = usersState.selectedUser.userId,
+                    onLoadItems = { viewModel.fetchUsers() }
+                ) { selectedUser ->
+                    selectedUser as User
+                    usersState.selectedUser = selectedUser
+                    nameState = selectedUser.userName ?: ""
+                    usernameState = selectedUser.userName ?: ""
+                    passwordState = ""//selectedUser.password ?: ""
+                    emailState = selectedUser.email ?: ""
+                    deviceIdState = selectedUser.deviceID ?: ""
                 }
             }
         }

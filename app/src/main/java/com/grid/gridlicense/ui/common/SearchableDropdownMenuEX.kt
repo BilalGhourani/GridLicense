@@ -1,5 +1,6 @@
 package com.grid.gridlicense.ui.common
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -40,6 +42,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.grid.gridlicense.R
@@ -48,17 +51,19 @@ import com.grid.gridlicense.model.SettingsModel
 
 @Composable
 fun SearchableDropdownMenuEx(
-        modifier: Modifier = Modifier,
-        items: MutableList<DataModel> = mutableListOf(),
-        label: String = "",
-        selectedId: String? = null,
-        showSelected: Boolean = true,
-        enableSearch: Boolean = true,
-        color: Color = SettingsModel.backgroundColor,
-        leadingIcon: @Composable ((Modifier) -> Unit)? = null,
-        onLeadingIconClick: () -> Unit = {},
-        onLoadItems: () -> Unit = {},
-        onSelectionChange: (DataModel) -> Unit = {},
+    modifier: Modifier = Modifier,
+    items: MutableList<DataModel> = mutableListOf(),
+    label: String = "",
+    selectedId: String? = null,
+    showSelected: Boolean = true,
+    enableSearch: Boolean = true,
+    color: Color = SettingsModel.backgroundColor,
+    leadingIcon: @Composable ((Modifier) -> Unit)? = null,
+    cornerRadius: Dp = 15.dp,
+    height :Dp = 70.dp,
+    onLeadingIconClick: () -> Unit = {},
+    onLoadItems: () -> Unit = {},
+    onSelectionChange: (DataModel) -> Unit = {},
 ) {
     var isLoaded by remember { mutableStateOf(false) }
     var expandedState by remember { mutableStateOf(false) }
@@ -90,11 +95,11 @@ fun SearchableDropdownMenuEx(
     ) {
         Row(modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp)
+            .height(height)
             .border(
                 1.dp,
                 Color.Black,
-                RoundedCornerShape(10.dp)
+                RoundedCornerShape(cornerRadius)
             )
             .clickable {
                 if (!expandedState && !isLoaded) {
@@ -129,7 +134,7 @@ fun SearchableDropdownMenuEx(
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 ),
-                color = Color.Black
+                color = SettingsModel.textColor
             )
 
             Spacer(modifier = Modifier.weight(1f))
@@ -145,7 +150,7 @@ fun SearchableDropdownMenuEx(
                     )
                     .align(Alignment.CenterVertically)
                     .rotate(if (expandedState) 180f else 0f),
-                tint = Color.Black
+                tint = SettingsModel.buttonColor
             )
         }
 
@@ -157,18 +162,26 @@ fun SearchableDropdownMenuEx(
                 )
             }
             Surface(
+                modifier = Modifier.padding(top = 2.dp),
                 shadowElevation = 5.dp,
-                modifier = Modifier.background(color = color)
+                color = color,
+                contentColor = color,
+                shape = RoundedCornerShape(cornerRadius),
+                border = BorderStroke(
+                    1.dp,
+                    Color.Black
+                )
             ) {
                 Column {
                     if (enableSearch) {
                         OutlinedTextField(modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 10.dp),
+                            .padding(horizontal = 8.dp, vertical = 5.dp),
                             value = searchText,
                             onValueChange = {
                                 searchText = it
                             },
+                            shape = RoundedCornerShape(cornerRadius),
                             label = {
                                 Text(
                                     "Search",
@@ -190,14 +203,14 @@ fun SearchableDropdownMenuEx(
 
                     if (filteredItems.isNotEmpty()) {
                         LazyColumn(
-                            modifier = modifier
+                            modifier = Modifier
                                 .fillMaxWidth()
                                 .wrapContentHeight()
                                 .heightIn(
                                     min = 40.dp,
                                     max = 160.dp
                                 ),
-                            contentPadding = PaddingValues(0.dp)
+                            contentPadding = PaddingValues(horizontal = 10.dp)
                         ) {
                             filteredItems.forEach { dataObj ->
                                 item {
@@ -207,7 +220,8 @@ fun SearchableDropdownMenuEx(
                                             .height(40.dp)
                                             .clickable {
                                                 onSelectionChange(dataObj)
-                                                if (showSelected) selectedItemState = dataObj.getName()
+                                                if (showSelected) selectedItemState =
+                                                    dataObj.getName()
                                                 expandedState = false
                                             },
                                         text = dataObj.getName(),
@@ -223,8 +237,7 @@ fun SearchableDropdownMenuEx(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(100.dp)
-                                .padding(10.dp)
-                                .background(color = Color.Transparent),
+                                .background(color = color),
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Image(

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
@@ -63,9 +64,9 @@ import kotlinx.coroutines.launch
 )
 @Composable
 fun ClientsView(
-        navController: NavController? = null,
-        modifier: Modifier = Modifier,
-        viewModel: ClientsViewModel = hiltViewModel()
+    navController: NavController? = null,
+    modifier: Modifier = Modifier,
+    viewModel: ClientsViewModel = hiltViewModel()
 ) {
     val clientsState: ClientsState by viewModel.clientsState.collectAsState(
         ClientsState()
@@ -150,106 +151,103 @@ fun ClientsView(
                     .background(color = Color.Transparent)
             ) {
                 Column(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .offset(y = 90.dp)
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            .weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        SearchableDropdownMenuEx(items = clientsState.clients.toMutableList(),
-                            modifier = Modifier.padding(10.dp),
-                            label = "Select Client",
-                            selectedId = clientsState.selectedClient.clientid,
-                            onLoadItems = { viewModel.fetchClients() }) { selectedClient ->
-                            selectedClient as Client
-                            clientsState.selectedClient = selectedClient
-                            nameState = selectedClient.clientName ?: ""
-                            emailState = selectedClient.clientEmail ?: ""
-                            phoneState = selectedClient.clientPhone ?: ""
-                            countryState = selectedClient.clientCountry ?: ""
-                        }
-
-                        UITextField(modifier = Modifier.padding(10.dp),
-                            defaultValue = nameState,
-                            label = "Name",
-                            placeHolder = "Enter Name",
-                            onAction = { emailFocusRequester.requestFocus() }) {
-                            nameState = it
-                            clientsState.selectedClient.clientName = it.trim()
-                        }
-
-                        UITextField(modifier = Modifier.padding(10.dp),
-                            defaultValue = emailState,
-                            label = "Email Address",
-                            placeHolder = "Enter Email Address",
-                            focusRequester = emailFocusRequester,
-                            onAction = { phoneFocusRequester.requestFocus() }) {
-                            emailState = it
-                            clientsState.selectedClient.clientEmail = it.trim()
-                        }
-
-                        UITextField(modifier = Modifier.padding(10.dp),
-                            defaultValue = phoneState,
-                            label = "Phone Number",
-                            placeHolder = "Enter Phone Number",
-                            keyboardType = KeyboardType.Number,
-                            focusRequester = phoneFocusRequester,
-                            onAction = { countryFocusRequester.requestFocus() }) {
-                            phoneState = it
-                            clientsState.selectedClient.clientPhone = it.trim()
-                        }
-
-                        UITextField(modifier = Modifier.padding(10.dp),
-                            defaultValue = countryState,
-                            label = "Country",
-                            placeHolder = "Enter Country",
-                            focusRequester = countryFocusRequester,
-                            imeAction = ImeAction.Done,
-                            onAction = { keyboardController?.hide() }) {
-                            countryState = it
-                            clientsState.selectedClient.clientCountry = it.trim()
-                        }
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentHeight()
-                                .padding(10.dp),
-                            verticalAlignment = Alignment.Bottom
-                        ) {
-                            UIButton(
-                                modifier = Modifier
-                                    .weight(.33f)
-                                    .padding(3.dp),
-                                text = "Save"
-                            ) {
-                                viewModel.saveClient(clientsState.selectedClient)
-                            }
-
-                            UIButton(
-                                modifier = Modifier
-                                    .weight(.33f)
-                                    .padding(3.dp),
-                                text = "Delete"
-                            ) {
-                                viewModel.deleteSelectedClient(clientsState.selectedClient)
-                            }
-
-                            UIButton(
-                                modifier = Modifier
-                                    .weight(.33f)
-                                    .padding(3.dp),
-                                text = "Close"
-                            ) {
-                                handleBack()
-                            }
-                        }
-
+                    UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        defaultValue = nameState,
+                        label = "Name",
+                        placeHolder = "Enter Name",
+                        onAction = { emailFocusRequester.requestFocus() }) {
+                        nameState = it
+                        clientsState.selectedClient.clientName = it.trim()
                     }
+
+                    UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        defaultValue = emailState,
+                        label = "Email Address",
+                        placeHolder = "Enter Email Address",
+                        focusRequester = emailFocusRequester,
+                        onAction = { phoneFocusRequester.requestFocus() }) {
+                        emailState = it
+                        clientsState.selectedClient.clientEmail = it.trim()
+                    }
+
+                    UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        defaultValue = phoneState,
+                        label = "Phone Number",
+                        placeHolder = "Enter Phone Number",
+                        keyboardType = KeyboardType.Number,
+                        focusRequester = phoneFocusRequester,
+                        onAction = { countryFocusRequester.requestFocus() }) {
+                        phoneState = it
+                        clientsState.selectedClient.clientPhone = it.trim()
+                    }
+
+                    UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        defaultValue = countryState,
+                        label = "Country",
+                        placeHolder = "Enter Country",
+                        focusRequester = countryFocusRequester,
+                        imeAction = ImeAction.Done,
+                        onAction = { keyboardController?.hide() }) {
+                        countryState = it
+                        clientsState.selectedClient.clientCountry = it.trim()
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .padding(horizontal = 10.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        UIButton(
+                            modifier = Modifier
+                                .weight(.33f)
+                                .padding(3.dp),
+                            text = "Save"
+                        ) {
+                            viewModel.saveClient(clientsState.selectedClient)
+                        }
+
+                        UIButton(
+                            modifier = Modifier
+                                .weight(.33f)
+                                .padding(3.dp),
+                            text = "Delete"
+                        ) {
+                            viewModel.deleteSelectedClient(clientsState.selectedClient)
+                        }
+
+                        UIButton(
+                            modifier = Modifier
+                                .weight(.33f)
+                                .padding(3.dp),
+                            text = "Close"
+                        ) {
+                            handleBack()
+                        }
+                    }
+
                 }
+
+                SearchableDropdownMenuEx(items = clientsState.clients.toMutableList(),
+                    modifier = Modifier.padding(horizontal = 10.dp).offset(y = 15.dp),
+                    label = "Select Client",
+                    selectedId = clientsState.selectedClient.clientid,
+                    onLoadItems = { viewModel.fetchClients() }) { selectedClient ->
+                    selectedClient as Client
+                    clientsState.selectedClient = selectedClient
+                    nameState = selectedClient.clientName ?: ""
+                    emailState = selectedClient.clientEmail ?: ""
+                    phoneState = selectedClient.clientPhone ?: ""
+                    countryState = selectedClient.clientCountry ?: ""
+                }
+
             }
         }
         LoadingIndicator(
