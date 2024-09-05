@@ -5,9 +5,13 @@ import android.content.res.Configuration
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SupervisedUserCircle
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.grid.gridlicense.R
 import com.grid.gridlicense.model.HomeSectionModel
 import java.time.Year
 import java.util.Calendar
@@ -17,16 +21,19 @@ object Utils {
 
     val homeViewList = mutableListOf(
         HomeSectionModel(
-            "Users",
-            "UsersView"
+            icon = R.drawable.users,
+            title = "Users",
+            composable = "UsersView"
         ),
         HomeSectionModel(
-            "Clients",
-            "ClientsView"
+            icon  = R.drawable.clients,
+            title = "Clients",
+            composable = "ClientsView"
         ),
         HomeSectionModel(
-            "Licenses",
-            "LicenseView"
+            icon = R.drawable.licenses,
+            title = "Licenses",
+            composable = "LicenseView"
         )
     )
 

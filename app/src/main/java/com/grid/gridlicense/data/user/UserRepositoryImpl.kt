@@ -8,7 +8,7 @@ import java.util.Date
 
 class UserRepositoryImpl() : UserRepository {
     override suspend fun insert(
-            user: User
+        user: User
     ): User {
         SQLServerWrapper.insert(
             "users",
@@ -31,7 +31,7 @@ class UserRepositoryImpl() : UserRepository {
     }
 
     override suspend fun delete(
-            user: User
+        user: User
     ) {
         SQLServerWrapper.delete(
             "users",
@@ -40,7 +40,7 @@ class UserRepositoryImpl() : UserRepository {
     }
 
     override suspend fun update(
-            user: User
+        user: User
     ) {
         if (user.password.isNullOrEmpty()) {
             SQLServerWrapper.update(
@@ -79,28 +79,33 @@ class UserRepositoryImpl() : UserRepository {
     }
 
     override suspend fun getUserByCredentials(
-            loginUsername: String,
-            loginPassword: String
+        loginUsername: String,
+        loginPassword: String
     ): User? {
-        val where = "users.username = '$loginUsername' AND users.password = HashBytes('SHA2_512', CONVERT(nvarchar(400),'$loginPassword'))"
-        val dbResult = SQLServerWrapper.getListOf(
-            "users",
-            "",
-            mutableListOf("*"),
-            where
-        )
         val users: MutableList<User> = mutableListOf()
-        dbResult?.let {
-            while (it.next()) {
-                users.add(User().apply {
-                    userId = it.getString("userid")
-                    userName = it.getString("username")
-                    password = it.getString("password")
-                    email = it.getString("email")
-                    deviceID = it.getString("deviseid")
-                })
+        try {
+            val where =
+                "users.username = '$loginUsername' AND users.password = HashBytes('SHA2_512', CONVERT(nvarchar(400),'$loginPassword'))"
+            val dbResult = SQLServerWrapper.getListOf(
+                "users",
+                "",
+                mutableListOf("*"),
+                where
+            )
+            dbResult?.let {
+                while (it.next()) {
+                    users.add(User().apply {
+                        userId = it.getString("userid")
+                        userName = it.getString("username")
+                        password = it.getString("password")
+                        email = it.getString("email")
+                        deviceID = it.getString("deviseid")
+                    })
+                }
+                SQLServerWrapper.closeResultSet(it)
             }
-            SQLServerWrapper.closeResultSet(it)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
 
         if (users.isNotEmpty()) {
@@ -125,51 +130,59 @@ class UserRepositoryImpl() : UserRepository {
     }
 
     override suspend fun getAllUsers(): MutableList<User> {
-        val dbResult = SQLServerWrapper.getListOf(
-            "users",
-            "",
-            mutableListOf("*"),
-            ""
-        )
         val users: MutableList<User> = mutableListOf()
-        dbResult?.let {
-            while (it.next()) {
-                users.add(User().apply {
-                    userId = it.getString("userid")
-                    userName = it.getString("username")
-                    password = it.getString("password")
-                    email = it.getString("email")
-                    deviceID = it.getString("deviseid")
-                })
+        try {
+            val dbResult = SQLServerWrapper.getListOf(
+                "users",
+                "",
+                mutableListOf("*"),
+                ""
+            )
+            dbResult?.let {
+                while (it.next()) {
+                    users.add(User().apply {
+                        userId = it.getString("userid")
+                        userName = it.getString("username")
+                        password = it.getString("password")
+                        email = it.getString("email")
+                        deviceID = it.getString("deviseid")
+                    })
+                }
+                SQLServerWrapper.closeResultSet(it)
             }
-            SQLServerWrapper.closeResultSet(it)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
         return users
 
     }
 
     override suspend fun getAllUsersWithKey(
-            key: String,
-            limit: Int
+        key: String,
+        limit: Int
     ): MutableList<User> {
-        val dbResult = SQLServerWrapper.getListOf(
-            "users",
-            "TOP $limit",
-            mutableListOf("*"),
-            if (key.isEmpty()) "" else "username LIKE '%$key%' OR email LIKE '%$key%' OR deviseid LIKE '%$key%'"
-        )
         val users: MutableList<User> = mutableListOf()
-        dbResult?.let {
-            while (it.next()) {
-                users.add(User().apply {
-                    userId = it.getString("userid")
-                    userName = it.getString("username")
-                    password = it.getString("password")
-                    email = it.getString("email")
-                    deviceID = it.getString("deviseid")
-                })
+        try {
+            val dbResult = SQLServerWrapper.getListOf(
+                "users",
+                "TOP $limit",
+                mutableListOf("*"),
+                if (key.isEmpty()) "" else "username LIKE '%$key%' OR email LIKE '%$key%' OR deviseid LIKE '%$key%'"
+            )
+            dbResult?.let {
+                while (it.next()) {
+                    users.add(User().apply {
+                        userId = it.getString("userid")
+                        userName = it.getString("username")
+                        password = it.getString("password")
+                        email = it.getString("email")
+                        deviceID = it.getString("deviseid")
+                    })
+                }
+                SQLServerWrapper.closeResultSet(it)
             }
-            SQLServerWrapper.closeResultSet(it)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
         return users
 

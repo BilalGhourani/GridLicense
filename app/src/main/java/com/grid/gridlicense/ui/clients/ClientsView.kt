@@ -5,8 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -14,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,7 +30,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -45,6 +48,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.grid.gridlicense.R
 import com.grid.gridlicense.data.SQLServerWrapper
@@ -68,9 +72,7 @@ fun ClientsView(
     modifier: Modifier = Modifier,
     viewModel: ClientsViewModel = hiltViewModel()
 ) {
-    val clientsState: ClientsState by viewModel.clientsState.collectAsState(
-        ClientsState()
-    )
+    val state by viewModel.clientsState.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
     val emailFocusRequester = remember { FocusRequester() }
     val phoneFocusRequester = remember { FocusRequester() }
@@ -83,8 +85,8 @@ fun ClientsView(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    LaunchedEffect(clientsState.warning) {
-        clientsState.warning?.value?.let { message ->
+    LaunchedEffect(state.warning) {
+        state.warning?.value?.let { message ->
             scope.launch {
                 snackbarHostState.showSnackbar(
                     message = message,
@@ -94,7 +96,19 @@ fun ClientsView(
         }
     }
 
+    fun clear() {
+        state.selectedClient = Client()
+        nameState = ""
+        phoneState = ""
+        emailState = ""
+        countryState = ""
+    }
+    val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     fun handleBack() {
+        if(isImeVisible){
+            keyboardController?.hide()
+            return
+        }
         CoroutineScope(Dispatchers.IO).launch {
             SQLServerWrapper.closeConnection()
         }
@@ -163,7 +177,7 @@ fun ClientsView(
                         placeHolder = "Enter Name",
                         onAction = { emailFocusRequester.requestFocus() }) {
                         nameState = it
-                        clientsState.selectedClient.clientName = it.trim()
+                        state.selectedClient.clientName = it.trim()
                     }
 
                     UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
@@ -173,7 +187,7 @@ fun ClientsView(
                         focusRequester = emailFocusRequester,
                         onAction = { phoneFocusRequester.requestFocus() }) {
                         emailState = it
-                        clientsState.selectedClient.clientEmail = it.trim()
+                        state.selectedClient.clientEmail = it.trim()
                     }
 
                     UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
@@ -184,7 +198,7 @@ fun ClientsView(
                         focusRequester = phoneFocusRequester,
                         onAction = { countryFocusRequester.requestFocus() }) {
                         phoneState = it
-                        clientsState.selectedClient.clientPhone = it.trim()
+                        state.selectedClient.clientPhone = it.trim()
                     }
 
                     UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
@@ -195,7 +209,7 @@ fun ClientsView(
                         imeAction = ImeAction.Done,
                         onAction = { keyboardController?.hide() }) {
                         countryState = it
-                        clientsState.selectedClient.clientCountry = it.trim()
+                        state.selectedClient.clientCountry = it.trim()
                     }
 
                     Row(
@@ -211,7 +225,7 @@ fun ClientsView(
                                 .padding(3.dp),
                             text = "Save"
                         ) {
-                            viewModel.saveClient(clientsState.selectedClient)
+                            viewModel.saveClient(state.selectedClient)
                         }
 
                         UIButton(
@@ -220,7 +234,7 @@ fun ClientsView(
                                 .padding(3.dp),
                             text = "Delete"
                         ) {
-                            viewModel.deleteSelectedClient(clientsState.selectedClient)
+                            viewModel.deleteSelectedClient(state.selectedClient)
                         }
 
                         UIButton(
@@ -235,13 +249,28 @@ fun ClientsView(
 
                 }
 
-                SearchableDropdownMenuEx(items = clientsState.clients.toMutableList(),
-                    modifier = Modifier.padding(horizontal = 10.dp).offset(y = 15.dp),
+                SearchableDropdownMenuEx(items = state.clients.toMutableList(),
+                    modifier = Modifier
+                        .padding(horizontal = 10.dp)
+                        .offset(y = 15.dp),
                     label = "Select Client",
-                    selectedId = clientsState.selectedClient.clientid,
-                    onLoadItems = { viewModel.fetchClients() }) { selectedClient ->
+                    selectedId = state.selectedClient.clientid,
+                    onLoadItems = { viewModel.fetchClients() },
+                    leadingIcon = { modifier ->
+                        if (state.selectedClient.clientid.isNotEmpty()) {
+                            Icon(
+                                Icons.Default.RemoveCircleOutline,
+                                contentDescription = "reset selection",
+                                tint = Color.Black,
+                                modifier = modifier
+                            )
+                        }
+                    },
+                    onLeadingIconClick = {
+                        clear()
+                    }) { selectedClient ->
                     selectedClient as Client
-                    clientsState.selectedClient = selectedClient
+                    state.selectedClient = selectedClient
                     nameState = selectedClient.clientName ?: ""
                     emailState = selectedClient.clientEmail ?: ""
                     phoneState = selectedClient.clientPhone ?: ""
@@ -251,16 +280,12 @@ fun ClientsView(
             }
         }
         LoadingIndicator(
-            show = clientsState.isLoading
+            show = state.isLoading
         )
 
-        if (clientsState.clear) {
-            clientsState.selectedClient = Client()
-            nameState = ""
-            phoneState = ""
-            emailState = ""
-            countryState = ""
-            clientsState.clear = false
+        if (state.clear) {
+            clear()
+            state.clear = false
         }
     }
 }

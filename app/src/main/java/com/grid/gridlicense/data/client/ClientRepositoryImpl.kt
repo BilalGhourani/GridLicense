@@ -4,7 +4,7 @@ import com.grid.gridlicense.data.SQLServerWrapper
 
 class ClientRepositoryImpl() : ClientRepository {
     override suspend fun insert(
-            client: Client
+        client: Client
     ): Client {
         SQLServerWrapper.insert(
             "clients",
@@ -27,7 +27,7 @@ class ClientRepositoryImpl() : ClientRepository {
     }
 
     override suspend fun delete(
-            client: Client
+        client: Client
     ) {
         SQLServerWrapper.delete(
             "clients",
@@ -36,7 +36,7 @@ class ClientRepositoryImpl() : ClientRepository {
     }
 
     override suspend fun update(
-            client: Client
+        client: Client
     ) {
         SQLServerWrapper.update(
             "clients",
@@ -57,24 +57,28 @@ class ClientRepositoryImpl() : ClientRepository {
     }
 
     override suspend fun getAllClients(): MutableList<Client> {
-        val dbResult = SQLServerWrapper.getListOf(
-            "clients",
-            "",
-            mutableListOf("*"),
-            ""
-        )
         val clients: MutableList<Client> = mutableListOf()
-        dbResult?.let {
-            while (it.next()) {
-                clients.add(Client().apply {
-                    clientid = it.getString("clientid")
-                    clientName = it.getString("name")
-                    clientEmail = it.getString("email")
-                    clientPhone = it.getString("phone")
-                    clientCountry = it.getString("country")
-                })
+        try {
+            val dbResult = SQLServerWrapper.getListOf(
+                "clients",
+                "",
+                mutableListOf("*"),
+                ""
+            )
+            dbResult?.let {
+                while (it.next()) {
+                    clients.add(Client().apply {
+                        clientid = it.getString("clientid")
+                        clientName = it.getString("name")
+                        clientEmail = it.getString("email")
+                        clientPhone = it.getString("phone")
+                        clientCountry = it.getString("country")
+                    })
+                }
+                SQLServerWrapper.closeResultSet(it)
             }
-            SQLServerWrapper.closeResultSet(it)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
         return clients
 

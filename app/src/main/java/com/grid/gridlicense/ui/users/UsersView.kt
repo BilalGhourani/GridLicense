@@ -5,8 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -14,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,17 +32,16 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -50,6 +52,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.grid.gridlicense.R
 import com.grid.gridlicense.data.SQLServerWrapper
@@ -73,9 +76,7 @@ fun UsersView(
     modifier: Modifier = Modifier,
     viewModel: UsersViewModel = hiltViewModel()
 ) {
-    val usersState: UsersState by viewModel.usersState.collectAsState(
-        UsersState()
-    )
+    val state by viewModel.usersState.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
     val passwordFocusRequester = remember { FocusRequester() }
     val emailFocusRequester = remember { FocusRequester() }
@@ -90,8 +91,8 @@ fun UsersView(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    LaunchedEffect(usersState.warning) {
-        usersState.warning?.value?.let { message ->
+    LaunchedEffect(state.warning) {
+        state.warning?.value?.let { message ->
             scope.launch {
                 snackbarHostState.showSnackbar(
                     message = message,
@@ -101,7 +102,21 @@ fun UsersView(
         }
     }
 
+    fun clear() {
+        state.selectedUser = User()
+        nameState = ""
+        usernameState = ""
+        passwordState = ""
+        emailState = ""
+        deviceIdState = ""
+    }
+
+    val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     fun handleBack() {
+        if(isImeVisible){
+            keyboardController?.hide()
+            return
+        }
         CoroutineScope(Dispatchers.IO).launch {
             SQLServerWrapper.closeConnection()
         }
@@ -171,7 +186,7 @@ fun UsersView(
                         placeHolder = "Enter Username",
                         onAction = { passwordFocusRequester.requestFocus() }) {
                         usernameState = it
-                        usersState.selectedUser.userName = it.trim()
+                        state.selectedUser.userName = it.trim()
                     }
 
                     UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
@@ -192,7 +207,7 @@ fun UsersView(
                             }
                         }) {
                         passwordState = it
-                        usersState.selectedUser.password = it.trim()
+                        state.selectedUser.password = it.trim()
                     }
 
                     UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
@@ -202,7 +217,7 @@ fun UsersView(
                         focusRequester = emailFocusRequester,
                         onAction = { deviceIdFocusRequester.requestFocus() }) {
                         emailState = it
-                        usersState.selectedUser.email = it.trim()
+                        state.selectedUser.email = it.trim()
                     }
 
                     UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
@@ -213,7 +228,7 @@ fun UsersView(
                         imeAction = ImeAction.Done,
                         onAction = { keyboardController?.hide() }) {
                         deviceIdState = it
-                        usersState.selectedUser.deviceID = it.trim()
+                        state.selectedUser.deviceID = it.trim()
                     }
 
                     Row(
@@ -229,7 +244,7 @@ fun UsersView(
                                 .padding(3.dp),
                             text = "Save"
                         ) {
-                            viewModel.saveUser(usersState.selectedUser)
+                            viewModel.saveUser(state.selectedUser)
                         }
 
                         UIButton(
@@ -238,7 +253,7 @@ fun UsersView(
                                 .padding(3.dp),
                             text = "Delete"
                         ) {
-                            viewModel.deleteSelectedUser(usersState.selectedUser)
+                            viewModel.deleteSelectedUser(state.selectedUser)
                         }
 
                         UIButton(
@@ -254,14 +269,29 @@ fun UsersView(
                 }
 
                 SearchableDropdownMenuEx(
-                    items = usersState.users.toMutableList(),
-                    modifier = Modifier.padding(horizontal = 10.dp).offset(y = 15.dp),
+                    items = state.users.toMutableList(),
+                    modifier = Modifier
+                        .padding(horizontal = 10.dp)
+                        .offset(y = 15.dp),
                     label = "Select User",
-                    selectedId = usersState.selectedUser.userId,
-                    onLoadItems = { viewModel.fetchUsers() }
+                    selectedId = state.selectedUser.userId,
+                    onLoadItems = { viewModel.fetchUsers() },
+                    leadingIcon = { modifier ->
+                        if (state.selectedUser.userId.isNotEmpty()) {
+                            Icon(
+                                Icons.Default.RemoveCircleOutline,
+                                contentDescription = "reset selection",
+                                tint = Color.Black,
+                                modifier = modifier
+                            )
+                        }
+                    },
+                    onLeadingIconClick = {
+                        clear()
+                    }
                 ) { selectedUser ->
                     selectedUser as User
-                    usersState.selectedUser = selectedUser
+                    state.selectedUser = selectedUser
                     nameState = selectedUser.userName ?: ""
                     usernameState = selectedUser.userName ?: ""
                     passwordState = ""//selectedUser.password ?: ""
@@ -271,17 +301,12 @@ fun UsersView(
             }
         }
         LoadingIndicator(
-            show = usersState.isLoading
+            show = state.isLoading
         )
 
-        if (usersState.clear) {
-            usersState.selectedUser = User()
-            nameState = ""
-            usernameState = ""
-            passwordState = ""
-            emailState = ""
-            deviceIdState = ""
-            usersState.clear = false
+        if (state.clear) {
+            clear()
+            state.clear = false
         }
     }
 }

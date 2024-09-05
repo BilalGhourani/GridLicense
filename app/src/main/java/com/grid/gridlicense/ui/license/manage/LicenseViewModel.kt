@@ -9,6 +9,7 @@ import com.grid.gridlicense.data.client.ClientRepository
 import com.grid.gridlicense.data.license.License
 import com.grid.gridlicense.data.license.LicenseRepository
 import com.grid.gridlicense.model.Event
+import com.grid.gridlicense.model.LicenseModel
 import com.grid.gridlicense.utils.CryptoUtils
 import com.grid.gridlicense.utils.DateHelper
 import com.grid.gridlicense.utils.FileUtils
@@ -74,8 +75,8 @@ class LicenseViewModel @Inject constructor(
 
     fun saveLicense(
             context: Context,
-            license: License
     ) {
+        val license = state.value.selectedLicense
         if (license.cltid.isNullOrEmpty()) {
             showError("select a client!")
             return
@@ -89,19 +90,23 @@ class LicenseViewModel @Inject constructor(
             if (isInserting) {
                 license.prepareForInsert()
                 licenseRepository.insert(license)
+                val client = state.value.selectedClient
+                val licenses = state.value.licenses
+                licenses.add(LicenseModel(license, client))
                 viewModelScope.launch(Dispatchers.Main) {
                     generate(
                         context,
-                        license
+                        license,
+                        licenses
                     )
                 }
             } else {
                 licenseRepository.update(license)
                 viewModelScope.launch(Dispatchers.Main) {
-                    state.value = state.value.copy(
-                        selectedLicense = license,
-                        isLoading = false,
-                        clear = true
+                    generate(
+                        context,
+                        license,
+                        state.value.licenses
                     )
                 }
             }
@@ -110,7 +115,8 @@ class LicenseViewModel @Inject constructor(
 
     fun generate(
             context: Context,
-            license: License
+            license: License,
+            licenses: MutableList<LicenseModel>
     ) {
         state.value = state.value.copy(
             isLoading = true
@@ -142,6 +148,8 @@ class LicenseViewModel @Inject constructor(
             )
             withContext(Dispatchers.Main) {
                 state.value = state.value.copy(
+                    selectedLicense = license,
+                    licenses = licenses,
                     isDone = true,
                     isLoading = false
                 )

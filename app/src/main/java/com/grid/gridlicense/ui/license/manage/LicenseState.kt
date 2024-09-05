@@ -9,6 +9,7 @@ data class LicenseState(
         var licenses: MutableList<LicenseModel> = mutableListOf(),
         var clients: MutableList<Client> = mutableListOf(),
         var selectedLicense: License = License(),
+        var selectedClient: Client = Client(),
         var isDone: Boolean = false,
         var isLoading: Boolean = false,
         var clear: Boolean = false,
