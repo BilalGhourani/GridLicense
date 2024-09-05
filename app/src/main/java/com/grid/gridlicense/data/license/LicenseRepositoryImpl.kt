@@ -71,11 +71,7 @@ class LicenseRepositoryImpl() : LicenseRepository {
                 "deviseid",
                 "module",
                 "expirydatemessage",
-                "expirydate",
-                "createduser",
-                "createddate",
-                "userstamp",
-                "timestamp"
+                "expirydate"
             ),
             listOf(
                 license.cltid,
@@ -83,11 +79,10 @@ class LicenseRepositoryImpl() : LicenseRepository {
                 license.deviseid,
                 license.module,
                 license.expirydatemessage,
-                license.expirydate,
-                license.createduser,
-                license.createddate,
-                license.userstamp,
-                license.timestamp
+                DateHelper.getDateInFormat(
+                    license.expirydate!!,
+                    "yyyy-MM-dd hh:mm:ss.SSS"
+                )
             ),
             "licenseid = '${license.licenseid}'"
         )

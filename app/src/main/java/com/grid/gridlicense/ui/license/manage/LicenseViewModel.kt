@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.grid.gridlicense.App
 import com.grid.gridlicense.data.SQLServerWrapper
+import com.grid.gridlicense.data.client.Client
 import com.grid.gridlicense.data.client.ClientRepository
 import com.grid.gridlicense.data.license.License
 import com.grid.gridlicense.data.license.LicenseRepository
@@ -25,8 +26,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LicenseViewModel @Inject constructor(
-        private val licenseRepository: LicenseRepository,
-        private val clientRepository: ClientRepository
+    private val licenseRepository: LicenseRepository,
+    private val clientRepository: ClientRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LicenseState())
@@ -74,7 +75,7 @@ class LicenseViewModel @Inject constructor(
     }
 
     fun saveLicense(
-            context: Context,
+        context: Context,
     ) {
         val license = state.value.selectedLicense
         if (license.cltid.isNullOrEmpty()) {
@@ -114,9 +115,9 @@ class LicenseViewModel @Inject constructor(
     }
 
     fun generate(
-            context: Context,
-            license: License,
-            licenses: MutableList<LicenseModel>
+        context: Context,
+        license: License,
+        licenses: MutableList<LicenseModel>
     ) {
         state.value = state.value.copy(
             isLoading = true
@@ -151,6 +152,38 @@ class LicenseViewModel @Inject constructor(
                     selectedLicense = license,
                     licenses = licenses,
                     isDone = true,
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+    fun deleteSelectedLicense() {
+        val license = state.value.selectedLicense
+        if (license.licenseid.isEmpty()) {
+            showError("select a License!")
+            return
+        }
+        state.value = state.value.copy(
+            warning = null,
+            isLoading = true
+        )
+
+        CoroutineScope(Dispatchers.IO).launch {
+            licenseRepository.delete(license)
+            val licenses = state.value.licenses
+            for (model in licenses) {
+                if (model.license == license) {
+                    licenses.remove(model)
+                    break
+                }
+            }
+            viewModelScope.launch(Dispatchers.Main) {
+                state.value = state.value.copy(
+                    selectedLicense = License(),
+                    licenses = licenses,
+                    isDone = false,
+                    clear = true,
                     isLoading = false
                 )
             }
