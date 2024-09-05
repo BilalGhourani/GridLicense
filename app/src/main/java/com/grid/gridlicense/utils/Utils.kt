@@ -26,7 +26,7 @@ object Utils {
         ),
         HomeSectionModel(
             "Licenses",
-            "LicensesListView"
+            "LicenseView"
         )
     )
 

@@ -51,13 +51,16 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.grid.gridlicense.R
-import com.grid.gridlicense.model.SettingsModel
-import com.grid.gridlicense.ui.common.SearchableDropdownMenu
-import com.grid.gridlicense.ui.theme.GridLicenseTheme
+import com.grid.gridlicense.data.SQLServerWrapper
 import com.grid.gridlicense.data.user.User
+import com.grid.gridlicense.model.SettingsModel
 import com.grid.gridlicense.ui.common.LoadingIndicator
+import com.grid.gridlicense.ui.common.SearchableDropdownMenuEx
 import com.grid.gridlicense.ui.common.UIButton
 import com.grid.gridlicense.ui.common.UITextField
+import com.grid.gridlicense.ui.theme.GridLicenseTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @OptIn(
@@ -99,6 +102,9 @@ fun UsersView(
     }
 
     fun handleBack() {
+        CoroutineScope(Dispatchers.IO).launch {
+            SQLServerWrapper.closeConnection()
+        }
         navController?.navigateUp()
     }
     BackHandler {
@@ -161,12 +167,12 @@ fun UsersView(
                             .weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        SearchableDropdownMenu(
+                        SearchableDropdownMenuEx(
                             items = usersState.users.toMutableList(),
                             modifier = Modifier.padding(10.dp),
                             label =  "Select User" ,
                             selectedId = usersState.selectedUser.userId,
-                            onSearch = {viewModel.searchInUsers(it)}
+                            onLoadItems = {viewModel.fetchUsers()}
                         ) { selectedUser ->
                             selectedUser as User
                             usersState.selectedUser = selectedUser

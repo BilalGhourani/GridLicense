@@ -3,8 +3,10 @@ package com.grid.gridlicense.ui.license.manage
 import com.grid.gridlicense.data.client.Client
 import com.grid.gridlicense.data.license.License
 import com.grid.gridlicense.model.Event
+import com.grid.gridlicense.model.LicenseModel
 
 data class LicenseState(
+        var licenses: MutableList<LicenseModel> = mutableListOf(),
         var clients: MutableList<Client> = mutableListOf(),
         var selectedLicense: License = License(),
         var isDone: Boolean = false,

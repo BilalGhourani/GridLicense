@@ -39,74 +39,57 @@ object SQLServerWrapper {
         }
     }
 
-    fun getListOf(
-        tableName: String,
-        colPrefix: String = "",
-        columns: MutableList<String>,
-        where: String,
-        joinSubQuery: String = "",
-    ): List<JSONObject> {
-        var connection: Connection? = null
-        var statement: PreparedStatement? = null
-        var resultSet: ResultSet? = null
-        val result = mutableListOf<JSONObject>()
+    fun closeResultSet(resultSet: ResultSet) {
         try {
-            connection =  getConnection()
-            val cols = columns.joinToString(", ")
-            val whereQuery = if (where.isNotEmpty()) "WHERE $where" else ""
-            val query = "SELECT $colPrefix $cols FROM $tableName $joinSubQuery $whereQuery"
-            statement = connection.prepareStatement(query)
-            resultSet = statement.executeQuery()
-            if (cols.contains("*")) {
-                // Get the ResultSetMetaData
-                val metaData = resultSet.metaData
-
-                // Get the number of columns
-                val columnCount = metaData.columnCount
-                columns.clear()
-                // Iterate through the columns and print their names
-                for (i in 1..columnCount) {
-                    columns.add(metaData.getColumnName(i))
-                }
+            val statement = resultSet.statement
+            if (mConnection == null && !statement.connection.isClosed) {
+                statement.connection.close()
             }
-            while (resultSet.next()) {
-                val obj = JSONObject()
-                for (columnName in columns) {
-                    val columnValue = resultSet.getString(columnName)
-                    obj.put(
-                        columnName,
-                        columnValue
-                    )
-                }
-                result.add(obj)
+            if (!statement.isClosed) {
+                statement.close()
+            }
+            if (!resultSet.isClosed) {
+                resultSet.close()
             }
         } catch (e: Exception) {
             e.printStackTrace()
-        } finally {
-            resultSet?.close()
-            statement?.close()
-            if (mConnection == null) {
-                connection?.close()
-            }
         }
-        return result
+    }
+
+    fun getListOf(
+            tableName: String,
+            colPrefix: String = "",
+            columns: MutableList<String>,
+            where: String,
+            joinSubQuery: String = "",
+    ): ResultSet? {
+        try {
+            val connection = getConnection()
+            val cols = columns.joinToString(", ")
+            val whereQuery = if (where.isNotEmpty()) "WHERE $where" else ""
+            val query = "SELECT $colPrefix $cols FROM $tableName $joinSubQuery $whereQuery"
+            val statement = connection.prepareStatement(query)
+            return statement.executeQuery()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return null
     }
 
     fun executeProcedure(
-        procedureName: String,
-        params: List<Any>,
+            procedureName: String,
+            params: List<Any>,
     ): List<JSONObject> {
         var connection: Connection? = null
         var statement: PreparedStatement? = null
         var resultSet: ResultSet? = null
         val result = mutableListOf<JSONObject>()
         try {
-            connection =  getConnection()
+            connection = getConnection()
 
             val parameters = params.joinToString(", ")
             // Prepare the stored procedure call
-            val query =
-                "select dbo.$procedureName($parameters) as $procedureName" // Modify with your procedure and parameters
+            val query = "select dbo.$procedureName($parameters) as $procedureName" // Modify with your procedure and parameters
             statement = connection.prepareStatement(query)
             resultSet = statement.executeQuery()
 
@@ -134,9 +117,9 @@ object SQLServerWrapper {
     }
 
     fun insert(
-        tableName: String,
-        columns: List<String>,
-        values: List<Any?>
+            tableName: String,
+            columns: List<String>,
+            values: List<Any?>
     ) {
         if (columns.size != values.size) {
             return
@@ -161,10 +144,10 @@ object SQLServerWrapper {
     }
 
     fun update(
-        tableName: String,
-        columns: List<String>,
-        values: List<Any?>,
-        where: String
+            tableName: String,
+            columns: List<String>,
+            values: List<Any?>,
+            where: String
     ) {
         if (columns.size != values.size) {
             return
@@ -177,8 +160,7 @@ object SQLServerWrapper {
             } else {
                 "$param='$value'"
             }
-        }
-            .joinToString(", ")
+        }.joinToString(", ")
         val whereQuery = if (where.isNotEmpty()) "WHERE $where " else ""
         val sqlQuery = "UPDATE $tableName SET $setStatement $whereQuery"
         runDbQuery(
@@ -188,9 +170,9 @@ object SQLServerWrapper {
     }
 
     fun delete(
-        tableName: String,
-        where: String,
-        innerJoin: String = ""
+            tableName: String,
+            where: String,
+            innerJoin: String = ""
     ) {
         val whereQuery = if (where.isNotEmpty()) "WHERE $where " else ""
         val sqlQuery = "DELETE FROM $tableName $innerJoin $whereQuery"
@@ -201,12 +183,13 @@ object SQLServerWrapper {
     }
 
     private fun runDbQuery(
-        query: String,
-        params: List<Any?>
+            query: String,
+            params: List<Any?>
     ): Boolean {
         var connection: Connection? = null
         var statement: PreparedStatement? = null
-        return try {
+        var isSuccess = false
+        try {
             connection = getConnection()
             statement = connection.prepareStatement(query)
 
@@ -217,16 +200,17 @@ object SQLServerWrapper {
                 )
             }
             val executeVal = statement.executeUpdate()
-            executeVal > 0
+            isSuccess = executeVal > 0
         } catch (e: Exception) {
             e.printStackTrace()
-            false
+            isSuccess = false
         } finally {
             statement?.close()
             if (mConnection == null) {
                 connection?.close()
             }
         }
+        return isSuccess
     }
 
     private fun getConnection(): Connection {

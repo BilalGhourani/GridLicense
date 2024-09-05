@@ -46,13 +46,16 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.grid.gridlicense.R
-import com.grid.gridlicense.model.SettingsModel
-import com.grid.gridlicense.ui.common.SearchableDropdownMenu
-import com.grid.gridlicense.ui.theme.GridLicenseTheme
+import com.grid.gridlicense.data.SQLServerWrapper
 import com.grid.gridlicense.data.client.Client
+import com.grid.gridlicense.model.SettingsModel
 import com.grid.gridlicense.ui.common.LoadingIndicator
+import com.grid.gridlicense.ui.common.SearchableDropdownMenuEx
 import com.grid.gridlicense.ui.common.UIButton
 import com.grid.gridlicense.ui.common.UITextField
+import com.grid.gridlicense.ui.theme.GridLicenseTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @OptIn(
@@ -91,6 +94,9 @@ fun ClientsView(
     }
 
     fun handleBack() {
+        CoroutineScope(Dispatchers.IO).launch {
+            SQLServerWrapper.closeConnection()
+        }
         navController?.navigateUp()
     }
     BackHandler {
@@ -153,12 +159,11 @@ fun ClientsView(
                             .weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        SearchableDropdownMenu(
-                            items = clientsState.clients.toMutableList(),
+                        SearchableDropdownMenuEx(items = clientsState.clients.toMutableList(),
                             modifier = Modifier.padding(10.dp),
-                            label = "Select Client" ,
-                            selectedId = clientsState.selectedClient.clientid
-                        ) { selectedClient ->
+                            label = "Select Client",
+                            selectedId = clientsState.selectedClient.clientid,
+                            onLoadItems = { viewModel.fetchClients() }) { selectedClient ->
                             selectedClient as Client
                             clientsState.selectedClient = selectedClient
                             nameState = selectedClient.clientName ?: ""

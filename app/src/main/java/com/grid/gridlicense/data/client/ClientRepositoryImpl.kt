@@ -64,14 +64,17 @@ class ClientRepositoryImpl() : ClientRepository {
             ""
         )
         val clients: MutableList<Client> = mutableListOf()
-        dbResult.forEach { obj ->
-            clients.add(Client().apply {
-                clientid = obj.optString("clientid")
-                clientName = obj.optString("name")
-                clientEmail = obj.optString("email")
-                clientPhone = obj.optString("phone")
-                clientCountry = obj.optString("country")
-            })
+        dbResult?.let {
+            while (it.next()) {
+                clients.add(Client().apply {
+                    clientid = it.getString("clientid")
+                    clientName = it.getString("name")
+                    clientEmail = it.getString("email")
+                    clientPhone = it.getString("phone")
+                    clientCountry = it.getString("country")
+                })
+            }
+            SQLServerWrapper.closeResultSet(it)
         }
         return clients
 

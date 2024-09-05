@@ -101,32 +101,35 @@ class LicenseRepositoryImpl() : LicenseRepository {
             ""
         )
         val licenses: MutableList<License> = mutableListOf()
-        dbResult.forEach { obj ->
-            licenses.add(License().apply {
-                licenseid = obj.optString("licenseid")
-                cltid = obj.optString("cltid")
-                company = obj.optString("company")
-                deviseid = obj.optString("deviseid")
-                module = obj.optString("module")
-                expirydatemessage = obj.optBoolean("expirydatemessage")
-                val expiry = obj.opt("expirydate")
-                expirydate = if (expiry is Date) expiry else DateHelper.getDateFromString(
-                    expiry as String,
-                    "yyyy-MM-dd hh:mm:ss.SSS"
-                )
-                createduser = obj.optString("createduser")
-                val created = obj.opt("createddate")
-                createddate = if (created is Date) created else DateHelper.getDateFromString(
-                    created as String,
-                    "yyyy-MM-dd hh:mm:ss.SSS"
-                )
-                userstamp = obj.optString("userstamp")
-                val timeSt = obj.opt("timestamp")
-                timestamp = if (timeSt is Date) timeSt else DateHelper.getDateFromString(
-                    timeSt as String,
-                    "yyyy-MM-dd hh:mm:ss.SSS"
-                )
-            })
+        dbResult?.let {
+            while (it.next()) {
+                licenses.add(License().apply {
+                    licenseid = it.getString("licenseid")
+                    cltid = it.getString("cltid")
+                    company = it.getString("company")
+                    deviseid = it.getString("deviseid")
+                    module = it.getString("module")
+                    expirydatemessage = it.getBoolean("expirydatemessage")
+                    val expiry = it.getObject("expirydate")
+                    expirydate = if (expiry is Date) expiry else DateHelper.getDateFromString(
+                        expiry as String,
+                        "yyyy-MM-dd hh:mm:ss.SSS"
+                    )
+                    createduser = it.getString("createduser")
+                    val created = it.getObject("createddate")
+                    createddate = if (created is Date) created else DateHelper.getDateFromString(
+                        created as String,
+                        "yyyy-MM-dd hh:mm:ss.SSS"
+                    )
+                    userstamp = it.getString("userstamp")
+                    val timeSt = it.getObject("timestamp")
+                    timestamp = if (timeSt is Date) timeSt else DateHelper.getDateFromString(
+                        timeSt as String,
+                        "yyyy-MM-dd hh:mm:ss.SSS"
+                    )
+                })
+            }
+            SQLServerWrapper.closeResultSet(it)
         }
         return licenses
 
@@ -141,26 +144,27 @@ class LicenseRepositoryImpl() : LicenseRepository {
             "INNER JOIN clients on cltid = clientid"
         )
         val licenseModels: MutableList<LicenseModel> = mutableListOf()
-        dbResult.forEach { obj ->
-            val license = License()
-            license.licenseid = obj.optString("licenseid")
-            license.cltid = obj.optString("cltid")
-            license.company = obj.optString("company")
-            license.deviseid = obj.optString("deviseid")
-            license.module = obj.optString("module")
-            license.expirydatemessage = obj.optBoolean("expirydatemessage")
-            val expiry = obj.opt("expirydate")
-            license.expirydate = when (expiry) {
-                null -> null
-                is Date -> expiry
-                else -> DateHelper.getDateFromString(
-                    expiry as String,
-                    "yyyy-MM-dd hh:mm:ss.SSS"
-                )
-            }
-            license.createduser = obj.optString("createduser")
-            val created = obj.opt("createddate")
-            license.createddate = when (created) {
+        dbResult?.let {
+            while (it.next()) {
+                val license = License()
+                license.licenseid = it.getString("licenseid")
+                license.cltid = it.getString("cltid")
+                license.company = it.getString("company")
+                license.deviseid = it.getString("deviseid")
+                license.module = it.getString("module")
+                license.expirydatemessage = it.getBoolean("expirydatemessage")
+                val expiry = it.getObject("expirydate")
+                license.expirydate = when (expiry) {
+                    null -> null
+                    is Date -> expiry
+                    else -> DateHelper.getDateFromString(
+                        expiry as String,
+                        "yyyy-MM-dd hh:mm:ss.SSS"
+                    )
+                }
+                license.createduser = it.getString("createduser")
+                val created = it.getObject("createddate")
+                license.createddate = when (created) {
                     null -> null
                     is Date -> created
                     else -> DateHelper.getDateFromString(
@@ -168,28 +172,30 @@ class LicenseRepositoryImpl() : LicenseRepository {
                         "yyyy-MM-dd hh:mm:ss.SSS"
                     )
                 }
-            license.userstamp = obj.optString("userstamp")
-            val timeSt = obj.opt("timestamp")
-            license.timestamp =  when (timeSt) {
-                null -> null
-                is Date -> timeSt
-                else -> DateHelper.getDateFromString(
-                    timeSt as String,
-                    "yyyy-MM-dd hh:mm:ss.SSS"
+                license.userstamp = it.getString("userstamp")
+                val timeSt = it.getObject("timestamp")
+                license.timestamp =  when (timeSt) {
+                    null -> null
+                    is Date -> timeSt
+                    else -> DateHelper.getDateFromString(
+                        timeSt as String,
+                        "yyyy-MM-dd hh:mm:ss.SSS"
+                    )
+                }
+                val client = Client()
+                client.clientid = it.getString("clientid")
+                client.clientName = it.getString("name")
+                client.clientEmail = it.getString("email")
+                client.clientPhone = it.getString("phone")
+                client.clientCountry = it.getString("country")
+                licenseModels.add(
+                    LicenseModel(
+                        license,
+                        client
+                    )
                 )
             }
-            val client = Client()
-            client.clientid = obj.optString("clientid")
-            client.clientName = obj.optString("name")
-            client.clientEmail = obj.optString("email")
-            client.clientPhone = obj.optString("phone")
-            client.clientCountry = obj.optString("country")
-            licenseModels.add(
-                LicenseModel(
-                    license,
-                    client
-                )
-            )
+            SQLServerWrapper.closeResultSet(it)
         }
         return licenseModels
     }

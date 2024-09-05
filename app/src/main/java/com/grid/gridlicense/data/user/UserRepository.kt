@@ -21,7 +21,7 @@ interface UserRepository {
     ): User?
 
     // Get all Users as stream.
-    suspend fun getAllUsers(limit: Int = SettingsModel.batchLimit): MutableList<User>
+    suspend fun getAllUsers(): MutableList<User>
 
     // Get all Users as stream.
     suspend fun getAllUsersWithKey(

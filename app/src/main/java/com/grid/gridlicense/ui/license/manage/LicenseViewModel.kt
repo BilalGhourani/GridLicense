@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.grid.gridlicense.App
+import com.grid.gridlicense.data.SQLServerWrapper
 import com.grid.gridlicense.data.client.ClientRepository
 import com.grid.gridlicense.data.license.License
 import com.grid.gridlicense.data.license.LicenseRepository
@@ -34,13 +35,30 @@ class LicenseViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
+            SQLServerWrapper.openConnection()
             fetchClients()
+        }
+    }
+
+    fun fetchLicenses() {
+        state.value = state.value.copy(
+            isLoading = true,
+            warning = null
+        )
+        viewModelScope.launch(Dispatchers.IO) {
+            val listOfLicenseModels = licenseRepository.getAllLicenseModels()
+            withContext(Dispatchers.Main) {
+                state.value = state.value.copy(
+                    licenses = listOfLicenseModels,
+                    isLoading = false
+                )
+            }
         }
     }
 
     private suspend fun fetchClients() {
         val listOfClients = clientRepository.getAllClients()
-        viewModelScope.launch(Dispatchers.Main) {
+        withContext(Dispatchers.Main) {
             state.value = state.value.copy(
                 clients = listOfClients
             )
@@ -54,7 +72,10 @@ class LicenseViewModel @Inject constructor(
         )
     }
 
-    fun saveLicense(context: Context,license: License) {
+    fun saveLicense(
+            context: Context,
+            license: License
+    ) {
         if (license.cltid.isNullOrEmpty()) {
             showError("select a client!")
             return
@@ -69,7 +90,10 @@ class LicenseViewModel @Inject constructor(
                 license.prepareForInsert()
                 licenseRepository.insert(license)
                 viewModelScope.launch(Dispatchers.Main) {
-                    generate(context,license)
+                    generate(
+                        context,
+                        license
+                    )
                 }
             } else {
                 licenseRepository.update(license)

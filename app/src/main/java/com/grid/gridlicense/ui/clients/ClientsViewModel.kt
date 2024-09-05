@@ -2,6 +2,7 @@ package com.grid.gridlicense.ui.clients
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.grid.gridlicense.data.SQLServerWrapper
 import com.grid.gridlicense.model.Event
 import com.grid.gridlicense.data.client.Client
 import com.grid.gridlicense.data.client.ClientRepository
@@ -10,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,16 +24,23 @@ class ClientsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            fetchClients()
+            SQLServerWrapper.openConnection()
         }
     }
 
-    private suspend fun fetchClients() {
-        val listOfClients =  clientRepository.getAllClients()
-        viewModelScope.launch(Dispatchers.Main) {
-            clientsState.value = clientsState.value.copy(
-                clients = listOfClients
-            )
+    fun fetchClients() {
+        clientsState.value = clientsState.value.copy(
+            isLoading = true,
+            warning = null
+        )
+        viewModelScope.launch(Dispatchers.IO) {
+            val listOfClients = clientRepository.getAllClients()
+            withContext(Dispatchers.Main) {
+                clientsState.value = clientsState.value.copy(
+                    clients = listOfClients,
+                    isLoading = false
+                )
+            }
         }
     }
 

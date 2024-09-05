@@ -59,18 +59,22 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.grid.gridlicense.ActivityScopedViewModel
 import com.grid.gridlicense.BuildConfig
+import com.grid.gridlicense.data.SQLServerWrapper
 import com.grid.gridlicense.data.client.Client
+import com.grid.gridlicense.model.LicenseModel
 import com.grid.gridlicense.model.SettingsModel
+import com.grid.gridlicense.ui.common.LoadingIndicator
+import com.grid.gridlicense.ui.common.SearchableDropdownMenuEx
+import com.grid.gridlicense.ui.common.UIAlertDialog
+import com.grid.gridlicense.ui.common.UIButton
 import com.grid.gridlicense.ui.common.UISwitch
+import com.grid.gridlicense.ui.common.UITextField
 import com.grid.gridlicense.ui.theme.GridLicenseTheme
 import com.grid.gridlicense.ui.theme.LightBlue
 import com.grid.gridlicense.utils.DateHelper
 import com.grid.gridlicense.utils.Utils
-import com.grid.gridlicense.ui.common.LoadingIndicator
-import com.grid.gridlicense.ui.common.SearchableDropdownMenu
-import com.grid.gridlicense.ui.common.UIAlertDialog
-import com.grid.gridlicense.ui.common.UIButton
-import com.grid.gridlicense.ui.common.UITextField
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
@@ -146,25 +150,29 @@ fun LicenseView(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+    fun displayLicenseModel(licenseModel: LicenseModel){
+        clientIdState = licenseModel.license.cltid ?: licenseModel.client.clientid
+        viewModel.state.value.clients = mutableListOf(licenseModel.client)
+        companyState = licenseModel.license.company ?: ""
+        deviceIdState = licenseModel.license.deviseid ?: ""
+        moduleState = licenseModel.license.module ?: ""
+        val time = licenseModel.license.expirydate?.time ?: initialDate.time
+        expiryDatePickerState = DatePickerState(
+            locale = CalendarLocale.getDefault(),
+            initialSelectedDateMillis = time
+        )
+        val expiryDate = getDateFromState(time)
+        expiryDateState = DateHelper.getDateInFormat(
+            expiryDate,
+            "yyyy-MM-dd"
+        )
+        expiryDateMessageState = licenseModel.license.expirydatemessage
+        activityViewModel.selectedLicenseModel = null
+    }
+
     LaunchedEffect(activityViewModel.selectedLicenseModel) {
         activityViewModel.selectedLicenseModel?.let {
-            clientIdState = it.license.cltid ?: it.client.clientid
-            viewModel.state.value.clients = mutableListOf(it.client)
-            companyState = it.license.company ?: ""
-            deviceIdState = it.license.deviseid ?: ""
-            moduleState = it.license.module ?: ""
-            val time = it.license.expirydate?.time ?: initialDate.time
-            expiryDatePickerState = DatePickerState(
-                locale = CalendarLocale.getDefault(),
-                initialSelectedDateMillis = time
-            )
-            val expiryDate = getDateFromState(time)
-            expiryDateState = DateHelper.getDateInFormat(
-                expiryDate,
-                "yyyy-MM-dd"
-            )
-            expiryDateMessageState = it.license.expirydatemessage
-            activityViewModel.selectedLicenseModel = null
+            displayLicenseModel(it)
         }
     }
 
@@ -187,6 +195,9 @@ fun LicenseView(
         if (licenseState.isLoading) {
             isPopupVisible = true
         } else {
+            CoroutineScope(Dispatchers.IO).launch {
+                SQLServerWrapper.closeConnection()
+            }
             navController?.navigateUp()
         }
     }
@@ -229,8 +240,15 @@ fun LicenseView(
                     .padding(it)
                     .verticalScroll(rememberScrollState())
             ) {
+                SearchableDropdownMenuEx(items = licenseState.licenses.toMutableList(),
+                    modifier = Modifier.padding(10.dp),
+                    label = "Select License",
+                    selectedId = licenseState.selectedLicense.licenseid,
+                    onLoadItems = { viewModel.fetchLicenses() }) { licenseModel ->
+                    displayLicenseModel(licenseModel as LicenseModel)
+                }
 
-                SearchableDropdownMenu(
+                SearchableDropdownMenuEx(
                     items = licenseState.clients.toMutableList(),
                     modifier = Modifier.padding(10.dp),
                     label = "Select Client",

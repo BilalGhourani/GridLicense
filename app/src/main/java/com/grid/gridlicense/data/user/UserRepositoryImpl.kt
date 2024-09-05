@@ -3,6 +3,7 @@ package com.grid.gridlicense.data.user
 import com.grid.gridlicense.data.SQLServerWrapper
 import com.grid.gridlicense.model.SettingsModel
 import com.grid.gridlicense.utils.DateHelper
+import org.json.JSONObject
 import java.util.Date
 
 class UserRepositoryImpl() : UserRepository {
@@ -89,15 +90,19 @@ class UserRepositoryImpl() : UserRepository {
             where
         )
         val users: MutableList<User> = mutableListOf()
-        dbResult.forEach { obj ->
-            users.add(User().apply {
-                userId = obj.optString("userid")
-                userName = obj.optString("username")
-                password = obj.optString("password")
-                email = obj.optString("email")
-                deviceID = obj.optString("deviseid")
-            })
+        dbResult?.let {
+            while (it.next()) {
+                users.add(User().apply {
+                    userId = it.getString("userid")
+                    userName = it.getString("username")
+                    password = it.getString("password")
+                    email = it.getString("email")
+                    deviceID = it.getString("deviseid")
+                })
+            }
+            SQLServerWrapper.closeResultSet(it)
         }
+
         if (users.isNotEmpty()) {
             return users[0]
         } else if (loginUsername.equals(
@@ -119,22 +124,25 @@ class UserRepositoryImpl() : UserRepository {
         return null
     }
 
-    override suspend fun getAllUsers(limit: Int): MutableList<User> {
+    override suspend fun getAllUsers(): MutableList<User> {
         val dbResult = SQLServerWrapper.getListOf(
             "users",
-            "TOP $limit",
+            "",
             mutableListOf("*"),
             ""
         )
         val users: MutableList<User> = mutableListOf()
-        dbResult.forEach { obj ->
-            users.add(User().apply {
-                userId = obj.optString("userid")
-                userName = obj.optString("username")
-                password = obj.optString("password")
-                email = obj.optString("email")
-                deviceID = obj.optString("deviseid")
-            })
+        dbResult?.let {
+            while (it.next()) {
+                users.add(User().apply {
+                    userId = it.getString("userid")
+                    userName = it.getString("username")
+                    password = it.getString("password")
+                    email = it.getString("email")
+                    deviceID = it.getString("deviseid")
+                })
+            }
+            SQLServerWrapper.closeResultSet(it)
         }
         return users
 
@@ -151,14 +159,17 @@ class UserRepositoryImpl() : UserRepository {
             if (key.isEmpty()) "" else "username LIKE '%$key%' OR email LIKE '%$key%' OR deviseid LIKE '%$key%'"
         )
         val users: MutableList<User> = mutableListOf()
-        dbResult.forEach { obj ->
-            users.add(User().apply {
-                userId = obj.optString("userid")
-                userName = obj.optString("username")
-                password = obj.optString("password")
-                email = obj.optString("email")
-                deviceID = obj.optString("deviseid")
-            })
+        dbResult?.let {
+            while (it.next()) {
+                users.add(User().apply {
+                    userId = it.getString("userid")
+                    userName = it.getString("username")
+                    password = it.getString("password")
+                    email = it.getString("email")
+                    deviceID = it.getString("deviseid")
+                })
+            }
+            SQLServerWrapper.closeResultSet(it)
         }
         return users
 
