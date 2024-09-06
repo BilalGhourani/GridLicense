@@ -26,8 +26,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LicenseViewModel @Inject constructor(
-    private val licenseRepository: LicenseRepository,
-    private val clientRepository: ClientRepository
+        private val licenseRepository: LicenseRepository,
+        private val clientRepository: ClientRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LicenseState())
@@ -75,7 +75,7 @@ class LicenseViewModel @Inject constructor(
     }
 
     fun saveLicense(
-        context: Context,
+            context: Context,
     ) {
         val license = state.value.selectedLicense
         if (license.cltid.isNullOrEmpty()) {
@@ -93,7 +93,12 @@ class LicenseViewModel @Inject constructor(
                 licenseRepository.insert(license)
                 val client = state.value.selectedClient
                 val licenses = state.value.licenses
-                licenses.add(LicenseModel(license, client))
+                licenses.add(
+                    LicenseModel(
+                        license,
+                        client
+                    )
+                )
                 viewModelScope.launch(Dispatchers.Main) {
                     generate(
                         context,
@@ -115,9 +120,9 @@ class LicenseViewModel @Inject constructor(
     }
 
     fun generate(
-        context: Context,
-        license: License,
-        licenses: MutableList<LicenseModel>
+            context: Context,
+            license: License,
+            licenses: MutableList<LicenseModel>
     ) {
         state.value = state.value.copy(
             isLoading = true

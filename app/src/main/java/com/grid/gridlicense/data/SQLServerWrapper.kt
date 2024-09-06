@@ -136,11 +136,7 @@ object SQLServerWrapper {
                 "'$it'"
             }
         }
-        val sqlQuery = "INSERT INTO $tableName ($cols) VALUES ($vals)"
-        runDbQuery(
-            sqlQuery,
-            mutableListOf()
-        )
+        runDbQuery("INSERT INTO $tableName ($cols) VALUES ($vals)")
     }
 
     fun update(
@@ -162,11 +158,7 @@ object SQLServerWrapper {
             }
         }.joinToString(", ")
         val whereQuery = if (where.isNotEmpty()) "WHERE $where " else ""
-        val sqlQuery = "UPDATE $tableName SET $setStatement $whereQuery"
-        runDbQuery(
-            sqlQuery,
-            mutableListOf()
-        )
+        runDbQuery("UPDATE $tableName SET $setStatement $whereQuery")
     }
 
     fun delete(
@@ -175,25 +167,21 @@ object SQLServerWrapper {
             innerJoin: String = ""
     ) {
         val whereQuery = if (where.isNotEmpty()) "WHERE $where " else ""
-        val sqlQuery = "DELETE FROM $tableName $innerJoin $whereQuery"
-        runDbQuery(
-            sqlQuery,
-            listOf()
-        )
+        runDbQuery( "DELETE FROM $tableName $innerJoin $whereQuery")
     }
 
     private fun runDbQuery(
             query: String,
-            params: List<Any?>
+            params: List<Any?>?=null
     ): Boolean {
         var connection: Connection? = null
         var statement: PreparedStatement? = null
-        var isSuccess = false
+        var isSuccess :Boolean
         try {
             connection = getConnection()
             statement = connection.prepareStatement(query)
 
-            params.forEachIndexed { index, param ->
+            params?.forEachIndexed { index, param ->
                 statement.setObject(
                     index + 1,
                     param
