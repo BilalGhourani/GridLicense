@@ -93,12 +93,14 @@ class LicenseViewModel @Inject constructor(
                 licenseRepository.insert(license)
                 val client = state.value.selectedClient
                 val licenses = state.value.licenses
-                licenses.add(
-                    LicenseModel(
-                        license,
-                        client
+                if (licenses.size > 0) {
+                    licenses.add(
+                        LicenseModel(
+                            license,
+                            client
+                        )
                     )
-                )
+                }
                 viewModelScope.launch(Dispatchers.Main) {
                     generate(
                         context,

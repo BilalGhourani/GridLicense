@@ -61,7 +61,9 @@ class ClientsViewModel @Inject constructor(
                 client.prepareForInsert()
                 val addedModel = clientRepository.insert(client)
                 val clients = clientsState.value.clients
-                clients.add(addedModel)
+                if (clients.size > 0) {
+                    clients.add(addedModel)
+                }
                 viewModelScope.launch(Dispatchers.Main) {
                     clientsState.value = clientsState.value.copy(
                         clients = clients,
