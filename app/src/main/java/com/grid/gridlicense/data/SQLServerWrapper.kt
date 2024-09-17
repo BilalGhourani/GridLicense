@@ -25,6 +25,9 @@ object SQLServerWrapper {
 
     fun openConnection() {
         try {
+            if (mConnection != null && !mConnection!!.isClosed) {
+                return
+            }
             mConnection = getDatabaseConnection()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -61,13 +64,14 @@ object SQLServerWrapper {
             colPrefix: String = "",
             columns: MutableList<String>,
             where: String,
+            orderBy: String = "",
             joinSubQuery: String = "",
     ): ResultSet? {
         try {
             val connection = getConnection()
             val cols = columns.joinToString(", ")
             val whereQuery = if (where.isNotEmpty()) "WHERE $where" else ""
-            val query = "SELECT $colPrefix $cols FROM $tableName $joinSubQuery $whereQuery"
+            val query = "SELECT $colPrefix $cols FROM $tableName $joinSubQuery $whereQuery $orderBy"
             val statement = connection.prepareStatement(query)
             return statement.executeQuery()
         } catch (e: Exception) {
@@ -167,16 +171,16 @@ object SQLServerWrapper {
             innerJoin: String = ""
     ) {
         val whereQuery = if (where.isNotEmpty()) "WHERE $where " else ""
-        runDbQuery( "DELETE FROM $tableName $innerJoin $whereQuery")
+        runDbQuery("DELETE FROM $tableName $innerJoin $whereQuery")
     }
 
     private fun runDbQuery(
             query: String,
-            params: List<Any?>?=null
+            params: List<Any?>? = null
     ): Boolean {
         var connection: Connection? = null
         var statement: PreparedStatement? = null
-        var isSuccess :Boolean
+        var isSuccess: Boolean
         try {
             connection = getConnection()
             statement = connection.prepareStatement(query)

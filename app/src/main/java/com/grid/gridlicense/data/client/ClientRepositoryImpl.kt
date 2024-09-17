@@ -63,7 +63,8 @@ class ClientRepositoryImpl() : ClientRepository {
                 "clients",
                 "",
                 mutableListOf("*"),
-                ""
+                "",
+                "ORDER BY name ASC"
             )
             dbResult?.let {
                 while (it.next()) {

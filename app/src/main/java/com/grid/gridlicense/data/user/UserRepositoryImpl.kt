@@ -136,7 +136,8 @@ class UserRepositoryImpl() : UserRepository {
                 "users",
                 "",
                 mutableListOf("*"),
-                ""
+                "",
+                "ORDER BY username ASC"
             )
             dbResult?.let {
                 while (it.next()) {
@@ -167,7 +168,8 @@ class UserRepositoryImpl() : UserRepository {
                 "users",
                 "TOP $limit",
                 mutableListOf("*"),
-                if (key.isEmpty()) "" else "username LIKE '%$key%' OR email LIKE '%$key%' OR deviseid LIKE '%$key%'"
+                if (key.isEmpty()) "" else "username LIKE '%$key%' OR email LIKE '%$key%' OR deviseid LIKE '%$key%'",
+                "ORDER BY username ASC"
             )
             dbResult?.let {
                 while (it.next()) {

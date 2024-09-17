@@ -33,12 +33,14 @@ class LicenseViewModel @Inject constructor(
     private val _state = MutableStateFlow(LicenseState())
     val state: MutableStateFlow<LicenseState> = _state
 
+    var selectedClientId: String? = null
+    var listOfLicenses: MutableList<LicenseModel> = mutableListOf()
+
     var licenseFile: File? = null
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
             SQLServerWrapper.openConnection()
-            fetchClients()
         }
     }
 
@@ -49,6 +51,29 @@ class LicenseViewModel @Inject constructor(
         )
         viewModelScope.launch(Dispatchers.IO) {
             val listOfLicenseModels = licenseRepository.getAllLicenseModels()
+            listOfLicenses = listOfLicenseModels
+            filterLicenses()
+        }
+    }
+
+    fun filterClientLicenses() {
+        viewModelScope.launch(Dispatchers.IO) {
+            filterLicenses()
+        }
+    }
+
+    private suspend fun filterLicenses() {
+        if (selectedClientId.isNullOrEmpty()) {
+            withContext(Dispatchers.Main) {
+                state.value = state.value.copy(
+                    licenses = listOfLicenses,
+                    isLoading = false
+                )
+            }
+        } else {
+            val listOfLicenseModels = listOfLicenses.filter {
+                it.license.cltid == selectedClientId
+            }.toMutableList()
             withContext(Dispatchers.Main) {
                 state.value = state.value.copy(
                     licenses = listOfLicenseModels,
@@ -58,12 +83,19 @@ class LicenseViewModel @Inject constructor(
         }
     }
 
-    private suspend fun fetchClients() {
-        val listOfClients = clientRepository.getAllClients()
-        withContext(Dispatchers.Main) {
-            state.value = state.value.copy(
-                clients = listOfClients
-            )
+    fun fetchClients() {
+        state.value = state.value.copy(
+            isLoading = true,
+            warning = null
+        )
+        viewModelScope.launch(Dispatchers.IO) {
+            val listOfClients = clientRepository.getAllClients()
+            withContext(Dispatchers.Main) {
+                state.value = state.value.copy(
+                    clients = listOfClients,
+                    isLoading = false
+                )
+            }
         }
     }
 

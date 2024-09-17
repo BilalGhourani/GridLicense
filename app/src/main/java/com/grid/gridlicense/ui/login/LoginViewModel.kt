@@ -2,6 +2,7 @@ package com.grid.gridlicense.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.grid.gridlicense.data.SQLServerWrapper
 import com.grid.gridlicense.data.user.UserRepository
 import com.grid.gridlicense.model.Event
 import com.grid.gridlicense.model.SettingsModel
@@ -18,6 +19,12 @@ class LoginViewModel @Inject constructor(
 
     private val _usersState = MutableStateFlow(LoginState())
     val usersState: MutableStateFlow<LoginState> = _usersState
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            SQLServerWrapper.openConnection()
+        }
+    }
 
     fun login(
             username: String,

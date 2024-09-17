@@ -143,6 +143,7 @@ class LicenseRepositoryImpl() : LicenseRepository {
                 "",
                 mutableListOf("*"),
                 "",
+                "ORDER BY createddate DESC",
                 "INNER JOIN clients on cltid = clientid"
             )
             dbResult?.let {

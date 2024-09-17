@@ -94,10 +94,10 @@ import java.util.Date
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LicenseView(
-    modifier: Modifier = Modifier,
-    navController: NavController? = null,
-    activityViewModel: ActivityScopedViewModel,
-    viewModel: LicenseViewModel = hiltViewModel()
+        modifier: Modifier = Modifier,
+        navController: NavController? = null,
+        activityViewModel: ActivityScopedViewModel,
+        viewModel: LicenseViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -142,8 +142,7 @@ fun LicenseView(
     var companyState by remember { mutableStateOf("") }
     var deviceIdState by remember { mutableStateOf("") }
     var moduleState by remember { mutableStateOf("") }
-    var expiryDatePickerState =
-        rememberDatePickerState(initialSelectedDateMillis = initialDate.time)
+    var expiryDatePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDate.time)
     var expiryDateState by remember {
         mutableStateOf(
             DateHelper.getDateInFormat(
@@ -292,7 +291,10 @@ fun LicenseView(
                         .offset(y = 180.dp)
                         .verticalScroll(rememberScrollState())
                 ) {
-                    UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    UITextField(modifier = Modifier.padding(
+                        horizontal = 10.dp,
+                        vertical = 5.dp
+                    ),
                         defaultValue = companyState,
                         label = "Company",
                         keyboardType = KeyboardType.Text,
@@ -304,7 +306,10 @@ fun LicenseView(
                         state.selectedLicense.company = companyState
                     }
 
-                    UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    UITextField(modifier = Modifier.padding(
+                        horizontal = 10.dp,
+                        vertical = 5.dp
+                    ),
                         defaultValue = deviceIdState,
                         label = "Device ID",
                         maxLines = 2,
@@ -318,7 +323,10 @@ fun LicenseView(
                         state.selectedLicense.deviseid = deviceIdState
                     }
 
-                    UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    UITextField(modifier = Modifier.padding(
+                        horizontal = 10.dp,
+                        vertical = 5.dp
+                    ),
                         defaultValue = moduleState,
                         label = "Module",
                         keyboardType = KeyboardType.Text,
@@ -332,7 +340,10 @@ fun LicenseView(
                     }
 
                     UISwitch(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        modifier = Modifier.padding(
+                            horizontal = 10.dp,
+                            vertical = 5.dp
+                        ),
                         checked = expiryDateMessageState,
                         text = "Expiry date message",
                     ) { exdm ->
@@ -340,7 +351,10 @@ fun LicenseView(
                         state.selectedLicense.expirydatemessage = exdm
                     }
 
-                    UITextField(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    UITextField(modifier = Modifier.padding(
+                        horizontal = 10.dp,
+                        vertical = 5.dp
+                    ),
                         defaultValue = expiryDateState,
                         label = "Expiry Date",
                         maxLines = 1,
@@ -376,7 +390,10 @@ fun LicenseView(
                     }
 
                     UISwitch(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        modifier = Modifier.padding(
+                            horizontal = 10.dp,
+                            vertical = 5.dp
+                        ),
                         checked = isRtaState,
                         text = "is RTA",
                     ) { isRta ->
@@ -409,7 +426,10 @@ fun LicenseView(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(70.dp)
-                                .padding(horizontal = 10.dp, vertical = 5.dp),
+                                .padding(
+                                    horizontal = 10.dp,
+                                    vertical = 5.dp
+                                ),
                             text = "Share"
                         ) {
                             shareExcelSheet(Intent.ACTION_SEND)
@@ -419,7 +439,10 @@ fun LicenseView(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .wrapContentHeight()
-                                .padding(horizontal = 10.dp, vertical = 5.dp),
+                                .padding(
+                                    horizontal = 10.dp,
+                                    vertical = 5.dp
+                                ),
                             verticalAlignment = Alignment.Bottom
                         ) {
                             UIButton(
@@ -428,8 +451,7 @@ fun LicenseView(
                                     .padding(3.dp),
                                 text = "Save"
                             ) {
-                                val date =
-                                    getDateFromState(expiryDatePickerState.selectedDateMillis!!)
+                                val date = getDateFromState(expiryDatePickerState.selectedDateMillis!!)
                                 val expiryDate = DateHelper.editDate(
                                     date,
                                     0,
@@ -464,13 +486,13 @@ fun LicenseView(
 
                 }
 
-                SearchableDropdownMenuEx(
-                    items = state.clients.toMutableList(),
+                SearchableDropdownMenuEx(items = state.clients.toMutableList(),
                     modifier = Modifier
                         .offset(y = 100.dp)
                         .padding(horizontal = 10.dp),
                     label = "Select Client",
                     selectedId = clientIdState,
+                    onLoadItems = { viewModel.fetchClients() },
                     leadingIcon = { modifier ->
                         if (clientIdState.isNotEmpty()) {
                             Icon(
@@ -483,11 +505,12 @@ fun LicenseView(
                     },
                     onLeadingIconClick = {
                         clientIdState = ""
-                    }
-                ) { selectedClient ->
+                    }) { selectedClient ->
                     selectedClient as Client
                     clientIdState = selectedClient.clientid
                     state.selectedLicense.cltid = selectedClient.clientid
+                    viewModel.selectedClientId = selectedClient.clientid
+                    viewModel.filterClientLicenses()
                 }
 
                 SearchableDropdownMenuEx(items = state.licenses.toMutableList(),
@@ -509,8 +532,7 @@ fun LicenseView(
                     },
                     onLeadingIconClick = {
                         clear()
-                    }
-                ) { licenseModel ->
+                    }) { licenseModel ->
                     displayLicenseModel(licenseModel as LicenseModel)
                 }
             }
@@ -525,8 +547,7 @@ fun LicenseView(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            val expiryDate =
-                                getDateFromState(expiryDatePickerState.selectedDateMillis!!)
+                            val expiryDate = getDateFromState(expiryDatePickerState.selectedDateMillis!!)
                             expiryDateState = DateHelper.getDateInFormat(
                                 expiryDate,
                                 "yyyy-MM-dd"
