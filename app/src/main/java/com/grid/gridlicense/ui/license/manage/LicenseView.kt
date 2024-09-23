@@ -505,6 +505,8 @@ fun LicenseView(
                     },
                     onLeadingIconClick = {
                         clientIdState = ""
+                        viewModel.selectedClientId = ""
+                        viewModel.filterClientLicenses()
                     }) { selectedClient ->
                     selectedClient as Client
                     clientIdState = selectedClient.clientid
