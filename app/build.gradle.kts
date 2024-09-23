@@ -23,7 +23,7 @@ android {
         applicationId = "com.grid.gridlicense"
         minSdk = 24
         targetSdk = 34
-        versionCode = 8
+        versionCode = 9
         versionName = "1.0.1"
         archivesName = "grid_license_release(${versionName}(${versionCode}))"
 
