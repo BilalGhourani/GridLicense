@@ -1,6 +1,10 @@
 package com.grid.gridlicense.ui.license.manage
 
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -88,16 +92,17 @@ import com.grid.gridlicense.utils.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.File
 import java.util.Calendar
 import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LicenseView(
-        modifier: Modifier = Modifier,
-        navController: NavController? = null,
-        activityViewModel: ActivityScopedViewModel,
-        viewModel: LicenseViewModel = hiltViewModel()
+    modifier: Modifier = Modifier,
+    navController: NavController? = null,
+    activityViewModel: ActivityScopedViewModel,
+    viewModel: LicenseViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -112,27 +117,55 @@ fun LicenseView(
         }.time
     }
 
-    fun shareExcelSheet(action: String) {
-        viewModel.licenseFile?.let { file ->
-            val shareIntent = Intent()
-            shareIntent.setAction(action)
-            val attachment = FileProvider.getUriForFile(
+    fun shareLicense() {
+        val shareIntent = Intent(Intent.ACTION_SEND)
+        val attachment: Uri = if (viewModel.licenseFilePath != null) {
+            Uri.parse(viewModel.licenseFilePath)
+        } else if (viewModel.licenseFile != null) {
+            FileProvider.getUriForFile(
                 context,
                 BuildConfig.APPLICATION_ID,
-                file
+                viewModel.licenseFile!!
             )
-            shareIntent.putExtra(
-                Intent.EXTRA_STREAM,
-                attachment
-            )
-            shareIntent.setType("application/octet-stream")
+        } else {
+            viewModel.showError("No File found!")
+            return
+        }
+        shareIntent.putExtra(
+            Intent.EXTRA_STREAM,
+            attachment
+        )
+        shareIntent.setType("application/octet-stream")
 
-            activityViewModel.startChooserActivity(
-                Intent.createChooser(
-                    shareIntent,
-                    "send license file"
-                )
+        activityViewModel.startChooserActivity(
+            Intent.createChooser(
+                shareIntent,
+                "send license file"
             )
+        )
+    }
+
+    fun openLicenseLocation() {
+        val downloadsDir =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val folder = File("$downloadsDir/${context.packageName}/licenses")
+
+        if (!folder.exists()) {
+            folder.mkdirs() // Create the folder if it doesn't exist
+        }
+        val folderUri: Uri =
+            // Use FileProvider for Android Nougat (API 24+) and above
+            FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, folder)
+
+        // Open the parent location
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.setDataAndType(folderUri, "resource/folder")
+
+        // Check if there's an app that can handle the intent
+        if (intent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(intent)
+        } else {
+            viewModel.showError("No app found to open folder")
         }
     }
 
@@ -142,7 +175,8 @@ fun LicenseView(
     var companyState by remember { mutableStateOf("") }
     var deviceIdState by remember { mutableStateOf("") }
     var moduleState by remember { mutableStateOf("") }
-    var expiryDatePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDate.time)
+    var expiryDatePickerState =
+        rememberDatePickerState(initialSelectedDateMillis = initialDate.time)
     var expiryDateState by remember {
         mutableStateOf(
             DateHelper.getDateInFormat(
@@ -208,6 +242,7 @@ fun LicenseView(
         isRtaState = false
         rtaDaysState = ""
         viewModel.licenseFile = null
+        viewModel.licenseFilePath = null
     }
 
     LaunchedEffect(activityViewModel.selectedLicenseModel) {
@@ -422,17 +457,35 @@ fun LicenseView(
                     }
 
                     if (state.isDone) {
-                        UIButton(
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(70.dp)
+                                .wrapContentHeight()
                                 .padding(
                                     horizontal = 10.dp,
                                     vertical = 5.dp
                                 ),
-                            text = "Share"
+                            verticalAlignment = Alignment.Bottom
                         ) {
-                            shareExcelSheet(Intent.ACTION_SEND)
+                            UIButton(
+                                modifier = Modifier
+                                    .weight(.5f)
+                                    .padding(5.dp)
+                                    .height(70.dp),
+                                text = "Share"
+                            ) {
+                                shareLicense()
+                            }
+
+                            UIButton(
+                                modifier = Modifier
+                                    .weight(.5f)
+                                    .padding(5.dp)
+                                    .height(70.dp),
+                                text = "Open"
+                            ) {
+                                openLicenseLocation()
+                            }
                         }
                     } else {
                         Row(
@@ -451,17 +504,24 @@ fun LicenseView(
                                     .padding(3.dp),
                                 text = "Save"
                             ) {
-                                val date = getDateFromState(expiryDatePickerState.selectedDateMillis!!)
-                                val expiryDate = DateHelper.editDate(
-                                    date,
-                                    0,
-                                    0,
-                                    0
-                                )
-                                state.selectedLicense.expirydate = expiryDate
-                                viewModel.saveLicense(
-                                    context
-                                )
+                                activityViewModel.requestStoragePermission { granted ->
+                                    if (granted) {
+                                        val date =
+                                            getDateFromState(expiryDatePickerState.selectedDateMillis!!)
+                                        val expiryDate = DateHelper.editDate(
+                                            date,
+                                            0,
+                                            0,
+                                            0
+                                        )
+                                        state.selectedLicense.expirydate = expiryDate
+                                        viewModel.saveLicense(
+                                            context
+                                        )
+                                    } else {
+                                        viewModel.showError("permission denied")
+                                    }
+                                }
                             }
 
                             UIButton(
@@ -549,7 +609,8 @@ fun LicenseView(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            val expiryDate = getDateFromState(expiryDatePickerState.selectedDateMillis!!)
+                            val expiryDate =
+                                getDateFromState(expiryDatePickerState.selectedDateMillis!!)
                             expiryDateState = DateHelper.getDateInFormat(
                                 expiryDate,
                                 "yyyy-MM-dd"

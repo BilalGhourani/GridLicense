@@ -10,4 +10,8 @@ sealed class ActivityScopedUIEvent {
         var intent: Intent
     ) : ActivityScopedUIEvent()
 
+    class RequestStoragePermission(
+       var delegate: (Boolean) -> Unit
+    ) : ActivityScopedUIEvent()
+
 }

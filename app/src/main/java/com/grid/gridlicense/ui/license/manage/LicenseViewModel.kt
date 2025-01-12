@@ -1,6 +1,8 @@
 package com.grid.gridlicense.ui.license.manage
 
 import android.content.Context
+import android.text.format.DateUtils
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.grid.gridlicense.App
@@ -26,8 +28,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LicenseViewModel @Inject constructor(
-        private val licenseRepository: LicenseRepository,
-        private val clientRepository: ClientRepository
+    private val licenseRepository: LicenseRepository,
+    private val clientRepository: ClientRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LicenseState())
@@ -37,6 +39,7 @@ class LicenseViewModel @Inject constructor(
     var listOfLicenses: MutableList<LicenseModel> = mutableListOf()
 
     var licenseFile: File? = null
+    var licenseFilePath: String? = null
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -107,7 +110,7 @@ class LicenseViewModel @Inject constructor(
     }
 
     fun saveLicense(
-            context: Context,
+        context: Context,
     ) {
         val license = state.value.selectedLicense
         if (license.cltid.isNullOrEmpty()) {
@@ -154,9 +157,9 @@ class LicenseViewModel @Inject constructor(
     }
 
     fun generate(
-            context: Context,
-            license: License,
-            licenses: MutableList<LicenseModel>
+        context: Context,
+        license: License,
+        licenses: MutableList<LicenseModel>
     ) {
         state.value = state.value.copy(
             isLoading = true
@@ -185,6 +188,16 @@ class LicenseViewModel @Inject constructor(
             licenseFile = FileUtils.saveLicenseFile(
                 context,
                 encryptedOutput
+            )
+            val clientName =
+                state.value.clients.firstOrNull { it.clientid == license.cltid }?.clientName ?: ""
+            val date = DateHelper.getDateInFormat(license.createddate ?: Date(), "yyyyMMdd")
+            licenseFilePath = FileUtils.saveToExternalStorage(
+                context,
+                "licenses",
+                licenseFile!!.toUri(),
+                "license-$clientName-$date",
+                "license"
             )
             withContext(Dispatchers.Main) {
                 state.value = state.value.copy(

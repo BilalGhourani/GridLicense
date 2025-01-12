@@ -3,6 +3,10 @@
     <external-path name="external" path="." />
     <external-files-path name="external_files" path="." />
     <files-path name="files" path="." />
+    <external-path
+        name="external_download"
+        path="Download/" />
+
 
 </paths>
 

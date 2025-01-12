@@ -42,6 +42,14 @@ class ActivityScopedViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    fun requestStoragePermission(
+        delegate: (Boolean) -> Unit
+    ) {
+        viewModelScope.launch {
+            _mainActivityEvent.send(ActivityScopedUIEvent.RequestStoragePermission(delegate))
+        }
+    }
+
     fun isLoggedIn(): Boolean {
         return activityState.value.isLoggedIn
     }

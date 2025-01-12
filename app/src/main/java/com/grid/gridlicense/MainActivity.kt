@@ -1,6 +1,7 @@
 package com.grid.gridlicense
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.LinkProperties
 import android.net.Network
@@ -11,6 +12,7 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,10 +21,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
 import com.grid.gridlicense.ui.navigation.AuthNavGraph
 import com.grid.gridlicense.ui.theme.GridLicenseTheme
 import com.grid.gridlicense.ui.theme.White
+import com.grid.gridlicense.utils.Utils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,16 +52,24 @@ class MainActivity : ComponentActivity() {
         }
 
         override fun onCapabilitiesChanged(
-                network: Network,
-                networkCapabilities: NetworkCapabilities
+            network: Network,
+            networkCapabilities: NetworkCapabilities
         ) {
         }
 
         override fun onLinkPropertiesChanged(
-                network: Network,
-                linkProperties: LinkProperties
+            network: Network,
+            linkProperties: LinkProperties
         ) {
         }
+    }
+
+    private var permissionDelegate: ((Boolean) -> Unit)? = null
+
+    private val requestStoragePermission = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        permissionDelegate?.invoke(isGranted)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -109,6 +121,21 @@ class MainActivity : ComponentActivity() {
 
                 is ActivityScopedUIEvent.StartChooserActivity -> {
                     startActivity(sharedEvent.intent)
+                }
+
+                is ActivityScopedUIEvent.RequestStoragePermission -> {
+                    if (ContextCompat.checkSelfPermission(
+                            this@MainActivity,
+                            Utils.getStoragePermissions()
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        permissionDelegate = { granted ->
+                            sharedEvent.delegate.invoke(granted)
+                        }
+                        requestStoragePermission.launch(Utils.getStoragePermissions())
+                    } else {
+                        sharedEvent.delegate.invoke(true)
+                    }
                 }
 
             }
