@@ -12,6 +12,7 @@ import android.util.Log
 import android.webkit.MimeTypeMap
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
+import com.grid.gridlicense.R
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
@@ -62,6 +63,7 @@ object FileUtils {
             type: String = "Image",
     ): String? {
         val resolver = context.contentResolver
+        val appName = context.getString(R.string.app_name)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val contentValues = ContentValues().apply {
                 put(
@@ -77,7 +79,7 @@ object FileUtils {
                 )
                 put(
                     MediaStore.DownloadColumns.RELATIVE_PATH,
-                    "Download/${context.packageName}/$parent"
+                    "Download/$appName/$parent"
                 )
                 put(
                     MediaStore.DownloadColumns.IS_PENDING,
@@ -145,7 +147,7 @@ object FileUtils {
             val mediaDir: File? = context.getExternalFilesDir(null)?.parentFile?.let {
                 File(
                     it,
-                    "Android/media/${context.packageName}/$parent"
+                    "Android/media/$appName/$parent"
                 )
             }
 
@@ -472,10 +474,11 @@ object FileUtils {
     }
 
     fun getLicenseFileContent(context: Context): File? {
+        val appName = context.getString(R.string.app_name)
         val downloadDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         val licensesFolder = File(
             downloadDirectory,
-            "${context.packageName}/licenses"
+            "$appName/licenses"
         )
         val licenseFile = File(
             licensesFolder,

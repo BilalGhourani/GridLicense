@@ -117,58 +117,6 @@ fun LicenseView(
         }.time
     }
 
-    fun shareLicense() {
-        val shareIntent = Intent(Intent.ACTION_SEND)
-        val attachment: Uri = if (viewModel.licenseFilePath != null) {
-            Uri.parse(viewModel.licenseFilePath)
-        } else if (viewModel.licenseFile != null) {
-            FileProvider.getUriForFile(
-                context,
-                BuildConfig.APPLICATION_ID,
-                viewModel.licenseFile!!
-            )
-        } else {
-            viewModel.showError("No File found!")
-            return
-        }
-        shareIntent.putExtra(
-            Intent.EXTRA_STREAM,
-            attachment
-        )
-        shareIntent.setType("application/octet-stream")
-
-        activityViewModel.startChooserActivity(
-            Intent.createChooser(
-                shareIntent,
-                "send license file"
-            )
-        )
-    }
-
-    fun openLicenseLocation() {
-        val downloadsDir =
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        val folder = File("$downloadsDir/${context.packageName}/licenses")
-
-        if (!folder.exists()) {
-            folder.mkdirs() // Create the folder if it doesn't exist
-        }
-        val folderUri: Uri =
-            // Use FileProvider for Android Nougat (API 24+) and above
-            FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, folder)
-
-        // Open the parent location
-        val intent = Intent(Intent.ACTION_GET_CONTENT)
-        intent.setDataAndType(folderUri, "resource/folder")
-
-        // Check if there's an app that can handle the intent
-        if (intent.resolveActivity(context.packageManager) != null) {
-            context.startActivity(intent)
-        } else {
-            viewModel.showError("No app found to open folder")
-        }
-    }
-
     val initialDate = Date()
 
     var clientIdState by remember { mutableStateOf("") }
@@ -474,7 +422,14 @@ fun LicenseView(
                                     .height(70.dp),
                                 text = "Share"
                             ) {
-                                shareLicense()
+                                viewModel.shareLicense(context) { intent ->
+                                    activityViewModel.startChooserActivity(
+                                        Intent.createChooser(
+                                            intent,
+                                            "send license file"
+                                        )
+                                    )
+                                }
                             }
 
                             UIButton(
@@ -484,7 +439,7 @@ fun LicenseView(
                                     .height(70.dp),
                                 text = "Open"
                             ) {
-                                openLicenseLocation()
+                                viewModel.openLicenseLocation(context)
                             }
                         }
                     } else {

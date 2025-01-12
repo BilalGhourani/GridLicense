@@ -1,11 +1,17 @@
 package com.grid.gridlicense.ui.license.manage
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Environment
 import android.text.format.DateUtils
+import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.grid.gridlicense.App
+import com.grid.gridlicense.BuildConfig
+import com.grid.gridlicense.R
 import com.grid.gridlicense.data.SQLServerWrapper
 import com.grid.gridlicense.data.client.Client
 import com.grid.gridlicense.data.client.ClientRepository
@@ -239,6 +245,44 @@ class LicenseViewModel @Inject constructor(
                     isLoading = false
                 )
             }
+        }
+    }
+
+    fun shareLicense(context: Context, callback: (Intent) -> Unit) {
+        val shareIntent = Intent(Intent.ACTION_SEND)
+        val attachment: Uri = if (licenseFilePath != null) {
+            Uri.parse(licenseFilePath)
+        } else if (licenseFile != null) {
+            FileProvider.getUriForFile(
+                context,
+                BuildConfig.APPLICATION_ID,
+                licenseFile!!
+            )
+        } else {
+            showError("No File found!")
+            return
+        }
+        shareIntent.putExtra(
+            Intent.EXTRA_STREAM,
+            attachment
+        )
+        shareIntent.setType("application/octet-stream")
+        callback.invoke(shareIntent)
+    }
+
+    fun openLicenseLocation(context: Context) {
+        try {
+            // Get the path to the "Download" folder
+            val downloadUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary:Download")
+
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+                // Set the initial URI to point to the "Download" folder
+                putExtra("android.provider.extra.INITIAL_URI", downloadUri)
+            }
+
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 }
