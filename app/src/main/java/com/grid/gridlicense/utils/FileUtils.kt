@@ -3,6 +3,7 @@ package com.grid.gridlicense.utils
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -26,8 +27,8 @@ import java.util.Date
 
 object FileUtils {
     fun saveLicenseFile(
-            context: Context,
-            licenseStr: String
+        context: Context,
+        licenseStr: String
     ): File {
         val storageDir = File(
             context.filesDir,
@@ -50,17 +51,17 @@ object FileUtils {
                 outputStream.close()
             }
         } catch (e: Exception) {
-           e.printStackTrace()
+            e.printStackTrace()
         }
         return destinationFile
     }
 
     fun saveToExternalStorage(
-            context: Context,
-            parent: String = "family",
-            sourceFilePath: Uri,
-            destName: String,
-            type: String = "Image",
+        context: Context,
+        parent: String = "family",
+        sourceFilePath: Uri,
+        destName: String,
+        type: String = "Image",
     ): String? {
         val resolver = context.contentResolver
         val appName = context.getString(R.string.app_name)
@@ -172,8 +173,8 @@ object FileUtils {
     }
 
     fun deleteFile(
-            context: Context,
-            path: String
+        context: Context,
+        path: String
     ) {
         if (path.startsWith("content")) {
             val file: DocumentFile? = DocumentFile.fromSingleUri(
@@ -188,8 +189,8 @@ object FileUtils {
     }
 
     private fun getMimeTypeFromFileExtension(
-            filePath: String,
-            type: String = "Image"
+        filePath: String,
+        type: String = "Image"
     ): String {
         val extension = MimeTypeMap.getFileExtensionFromUrl(filePath)
         val fallback = when (type) {
@@ -202,8 +203,8 @@ object FileUtils {
     }
 
     fun readFileFromAssets(
-            fileName: String,
-            context: Context
+        fileName: String,
+        context: Context
     ): String {
         return try {
             val inputStream = context.assets.open(fileName)
@@ -224,8 +225,8 @@ object FileUtils {
     }
 
     private fun copyFile(
-            fromFile: File,
-            toFile: File
+        fromFile: File,
+        toFile: File
     ) {
         try {
             val sourceChannel = FileInputStream(fromFile).channel
@@ -246,9 +247,9 @@ object FileUtils {
     }
 
     private fun copyFile(
-            context: Context,
-            fromFile: Uri,
-            toFile: File
+        context: Context,
+        fromFile: Uri,
+        toFile: File
     ) {
         try {
             val contentResolver = context.contentResolver
@@ -333,8 +334,8 @@ object FileUtils {
     }
 
     fun getLastWriteTimeFromUri(
-            context: Context,
-            uri: Uri
+        context: Context,
+        uri: Uri
     ): Date? {
         val file = getFileFromUri(
             context,
@@ -347,8 +348,8 @@ object FileUtils {
     }
 
     fun getFileFromUri(
-            context: Context,
-            uri: Uri
+        context: Context,
+        uri: Uri
     ): File? {
         val filePath: String = getFilePathFromUri(
             context,
@@ -362,8 +363,8 @@ object FileUtils {
     }
 
     private fun getFilePathFromUri(
-            context: Context,
-            uri: Uri
+        context: Context,
+        uri: Uri
     ): String {
         return if (DocumentsContract.isDocumentUri(
                 context,
@@ -441,10 +442,10 @@ object FileUtils {
     }
 
     private fun getDataColumn(
-            context: Context,
-            uri: Uri,
-            selection: String?,
-            selectionArgs: Array<String>?
+        context: Context,
+        uri: Uri,
+        selection: String?,
+        selectionArgs: Array<String>?
     ): String {
         context.contentResolver.query(
             uri,
@@ -475,7 +476,8 @@ object FileUtils {
 
     fun getLicenseFileContent(context: Context): File? {
         val appName = context.getString(R.string.app_name)
-        val downloadDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val downloadDirectory =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         val licensesFolder = File(
             downloadDirectory,
             "$appName/licenses"
@@ -492,8 +494,8 @@ object FileUtils {
     }
 
     fun saveLicenseContent(
-            context: Context,
-            content: String
+        context: Context,
+        content: String
     ) {
         val licenseFile = File(
             context.filesDir,
@@ -508,6 +510,22 @@ object FileUtils {
             "license"
         )
 
+    }
+
+    fun openDownloads(context: Context) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(
+                    Uri.parse("content://com.android.externalstorage.documents/document/primary:Download"),
+                    "*/*"
+                )
+                addCategory(Intent.CATEGORY_DEFAULT)
+            }
+
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
 

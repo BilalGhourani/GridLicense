@@ -271,18 +271,6 @@ class LicenseViewModel @Inject constructor(
     }
 
     fun openLicenseLocation(context: Context) {
-        try {
-            // Get the path to the "Download" folder
-            val downloadUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary:Download")
-
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
-                // Set the initial URI to point to the "Download" folder
-                putExtra("android.provider.extra.INITIAL_URI", downloadUri)
-            }
-
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        FileUtils.openDownloads(context)
     }
 }
